@@ -8,7 +8,7 @@
       "version": "1.0.1",
       "restore": {
         "projectUniqueName": "C:\\Users\\BenjaminME\\source\\repos\\ConnectivityFramework\\Protocol\\Protocol.csproj",
-        "projectName": "Protocol",
+        "projectName": "Skyline.DataMiner.Core.ConnectivityFramework.Protocol",
         "projectPath": "C:\\Users\\BenjaminME\\source\\repos\\ConnectivityFramework\\Protocol\\Protocol.csproj",
         "packagesPath": "C:\\Users\\BenjaminME\\.nuget\\packages\\",
         "outputPath": "C:\\Users\\BenjaminME\\source\\repos\\ConnectivityFramework\\Protocol\\obj\\",

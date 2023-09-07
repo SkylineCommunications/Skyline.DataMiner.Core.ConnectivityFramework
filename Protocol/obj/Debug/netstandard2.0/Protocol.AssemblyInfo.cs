@@ -15,8 +15,8 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.1.0")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.1")]
-[assembly: System.Reflection.AssemblyProductAttribute("Protocol")]
-[assembly: System.Reflection.AssemblyTitleAttribute("Protocol")]
+[assembly: System.Reflection.AssemblyProductAttribute("Skyline.DataMiner.Core.ConnectivityFramework.Protocol")]
+[assembly: System.Reflection.AssemblyTitleAttribute("Skyline.DataMiner.Core.ConnectivityFramework.Protocol")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.1.0")]
 [assembly: System.Reflection.AssemblyMetadataAttribute("RepositoryUrl", "https://github.com/SkylineCommunications/Skyline.DataMiner.Core.ConnectivityFrame" +
     "work.git")]

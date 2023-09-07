@@ -10,10 +10,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
-using Protocol;
+using Skyline.DataMiner.Core.ConnectivityFramework.Protocol;
 using Interop.SLDms;
 
-namespace Protocol
+namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 {
     /// <summary>
     /// The QAction class
