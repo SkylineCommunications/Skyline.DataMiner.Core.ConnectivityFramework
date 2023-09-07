@@ -1,0 +1,12 @@
+C:\Users\BenjaminME\source\repos\ConnectivityFramework\Protocol\bin\Debug\netstandard2.0\Protocol.deps.json
+C:\Users\BenjaminME\source\repos\ConnectivityFramework\Protocol\bin\Debug\netstandard2.0\Protocol.dll
+C:\Users\BenjaminME\source\repos\ConnectivityFramework\Protocol\bin\Debug\netstandard2.0\Protocol.pdb
+C:\Users\BenjaminME\source\repos\ConnectivityFramework\Protocol\bin\Debug\netstandard2.0\Protocol.xml
+C:\Users\BenjaminME\source\repos\ConnectivityFramework\Protocol\obj\Debug\netstandard2.0\Protocol.csproj.AssemblyReference.cache
+C:\Users\BenjaminME\source\repos\ConnectivityFramework\Protocol\obj\Debug\netstandard2.0\Protocol.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\BenjaminME\source\repos\ConnectivityFramework\Protocol\obj\Debug\netstandard2.0\Protocol.AssemblyInfoInputs.cache
+C:\Users\BenjaminME\source\repos\ConnectivityFramework\Protocol\obj\Debug\netstandard2.0\Protocol.AssemblyInfo.cs
+C:\Users\BenjaminME\source\repos\ConnectivityFramework\Protocol\obj\Debug\netstandard2.0\Protocol.csproj.CoreCompileInputs.cache
+C:\Users\BenjaminME\source\repos\ConnectivityFramework\Protocol\obj\Debug\netstandard2.0\Protocol.dll
+C:\Users\BenjaminME\source\repos\ConnectivityFramework\Protocol\obj\Debug\netstandard2.0\Protocol.xml
+C:\Users\BenjaminME\source\repos\ConnectivityFramework\Protocol\obj\Debug\netstandard2.0\Protocol.pdb
