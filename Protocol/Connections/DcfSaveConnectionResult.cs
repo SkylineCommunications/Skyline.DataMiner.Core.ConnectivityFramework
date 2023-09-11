@@ -1,5 +1,4 @@
-﻿using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Skyline.Protocol.Library.ProtocolDCF;
-using Skyline.DataMiner.Scripting;
+﻿using Skyline.DataMiner.Scripting;
 using System;
 using System.Collections.Generic;
 using System.Text;

@@ -1,0 +1,101 @@
+﻿Changes to the 900-1000 lines of code
+
+ConnectivityConnection matchingConnection = elementConnections.FindValue(indexer, uniqueKey).FirstOrDefault();
+ConnectivityConnection newDestinationConnection = null;
+int sourceId = -1;
+int destinationId = -1;
+bool updated = true;
+
+string connectionType = internalConnection ? "Internal" : "External";
+string sourceKey = currentRequest.Source.ElementKey;
+string destinationKey = currentRequest.Destination.ElementKey;
+
+string logMessage = $"QA{protocol.QActionID}|DCF Connection|Adding {connectionType} Connection:{currentRequest.CustomName} | With Connection Filter: {currentRequest.ConnectionFilter}";
+
+if (!internalConnection)
+{
+    logMessage += $" | from Element:{sourceKey} To Element:{destinationKey}";
+}
+
+DebugLog(logMessage, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+bool operationResult = false;
+
+if (matchingConnection == null)
+{
+    // Add a new Connection
+    if (!currentRequest.Async)
+    {
+        operationResult = internalConnection
+            ? currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName, currentRequest.Destination, currentRequest.ConnectionFilter, false, out matchingConnection, out newDestinationConnection, 420000)
+            : currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName + " -RETURN", currentRequest.Destination, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out matchingConnection, out newDestinationConnection, 420000);
+    }
+    else
+    {
+        operationResult = internalConnection
+            ? currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName, currentRequest.Destination, currentRequest.ConnectionFilter, false, out sourceId, out destinationId)
+            : currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName + " -RETURN", currentRequest.Destination, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out sourceId, out destinationId);
+    }
+
+    if (!operationResult)
+    {
+        string logErrorType = internalConnection ? "-sync" : "-async";
+        string logErrorMessage = internalConnection
+            ? $"QA{protocol.QActionID}: |ERR: DCF Connection|Adding {connectionType} DCF Connection{logErrorType}:{currentRequest.CustomName} on element {sourceKey} Timed-Out after 7 minutes or returned false. Connection may not have been added"
+            : $"QA{protocol.QActionID}:|ERR: DCF Connection|Adding External DCF Connection:{currentRequest.CustomName} from element {sourceKey} to element {destinationKey} Timed-Out after 7 minutes or returned false. Connection may not have been added";
+
+        protocol.Log(logErrorMessage, LogType.Error, LogLevel.NoLogging);
+    }
+}
+else
+{
+    // Update the Connection
+    bool updateRequired = matchingConnection.ConnectionName != currentRequest.CustomName ||
+        matchingConnection.SourceDataMinerId + "/" + matchingConnection.SourceElementId != sourceKey ||
+        matchingConnection.SourceInterfaceId != currentRequest.Source.InterfaceId ||
+        matchingConnection.DestinationDMAId + "/" + matchingConnection.DestinationEId != destinationKey ||
+        matchingConnection.DestinationInterfaceId != currentRequest.Destination.InterfaceId ||
+        matchingConnection.ConnectionFilter != currentRequest.ConnectionFilter;
+
+    if (!updateRequired)
+    {
+        updated = false;
+        string logMessageType = internalConnection ? "Internal" : "External";
+        string logMessageSame = internalConnection
+            ? $"QA{protocol.QActionID}|DCF Connection ({matchingConnection.ConnectionId}) | Not Updating {logMessageType} Connection (ID:{matchingConnection.ConnectionId}) To:{currentRequest.CustomName} on Element:{sourceKey} -- No Change Detected"
+            : $"QA{protocol.QActionID}|DCF Connection ({matchingConnection.ConnectionId}) | Not Updating {logMessageType} Connection (ID:{matchingConnection.ConnectionId}) To:{currentRequest.CustomName} from Element:{sourceKey} To Element:{destinationKey} -- No Change Detected";
+
+        DebugLog(logMessageSame, LogType.Allways, LogLevel.NoLogging, DcfLogType.Same);
+    }
+    else
+    {
+        string logMessageType = internalConnection ? "Internal" : "External";
+        string logMessageChange = internalConnection
+            ? $"QA{protocol.QActionID}|DCF Connection ({matchingConnection.ConnectionId}) | Updating {logMessageType} Connection (ID:{matchingConnection.ConnectionId}) To:{currentRequest.CustomName} | With Connection Filter: {currentRequest.ConnectionFilter} | on Element:{sourceKey}"
+            : $"QA{protocol.QActionID}|DCF Connection ({matchingConnection.ConnectionId}) | Updating {logMessageType} Connection (ID:{matchingConnection.ConnectionId}) To:{currentRequest.CustomName} | With Connection Filter: {currentRequest.ConnectionFilter} | from Element:{sourceKey} To Element:{destinationKey}";
+
+        DebugLog(logMessageChange, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+        operationResult = internalConnection
+            ? matchingConnection.Update(currentRequest.CustomName, currentRequest.Source.InterfaceId, currentRequest.CustomName, currentRequest.Destination.DataMinerId, currentRequest.Destination.ElementId, currentRequest.Destination.InterfaceId, currentRequest.ConnectionFilter, false, out newDestinationConnection, 420000)
+            : matchingConnection.Update(currentRequest.CustomName, currentRequest.Source.InterfaceId, currentRequest.CustomName + " -RETURN", currentRequest.Destination.DataMinerId, currentRequest.Destination.ElementId, currentRequest.Destination.InterfaceId, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out newDestinationConnection, 420000);
+
+        if (!operationResult)
+        {
+            string logErrorType = internalConnection ? "Internal" : "External";
+            string logErrorMessage = internalConnection
+                ? $"QA{protocol.QActionID}|ERR: DCF Connection ({matchingConnection.ConnectionId}) | Updating {logErrorType} DCF Connection:{currentRequest.CustomName} on element {sourceKey} Timed-Out after 7 minutes or returned false. Connection may not have been updated"
+                : $"QA{protocol.QActionID}|ERR: DCF Connection ({matchingConnection.ConnectionId}) | Updating {logErrorType} DCF Connection:{currentRequest.CustomName} from element {sourceKey} to element {destinationKey} Timed-Out after 7 minutes or returned false. Connection may not have been updated";
+
+            protocol.Log(logErrorMessage, LogType.Error, LogLevel.NoLogging);
+        }
+    }
+}
+
+if (matchingConnection != null) sourceId = matchingConnection.ConnectionId;
+if (newDestinationConnection != null) destinationId = newDestinationConnection.ConnectionId;
+
+
+
+
+

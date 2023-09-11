@@ -20,6 +20,7 @@
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/SkylineCommunications/Skyline.DataMiner.Core.ConnectivityFramework.git</RepositoryUrl>
 		<RootNamespace>Skyline.DataMiner.Core.ConnectivityFramework.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+		<OutputType>Library</OutputType>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -30,5 +31,9 @@
 
 	<ItemGroup>
 	  <PackageReference Include="Skyline.DataMiner.Dev.Protocol" Version="10.3.9.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Helpers\" />
 	</ItemGroup>
 </Project>

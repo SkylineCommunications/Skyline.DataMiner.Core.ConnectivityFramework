@@ -1,21 +1,15 @@
 ﻿using Skyline.DataMiner.Scripting;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
 using Interop.SLDms;
-using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Skyline.Protocol.Library.ProtocolDCF;
 using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections;
 using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Comparers;
-using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Debug;
 using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Interfaces;
-using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Logs;
 using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Options;
 using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Filters;
 using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Collections;
@@ -31,7 +25,7 @@ using ConnectionType = Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Con
 using SyncOption = Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Options.SyncOption;
 using DcfDebugLevel = Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Debug.DcfDebugLevel;
 
-namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
+namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 {
     public class DcfHelper : IDisposable
     {
@@ -44,7 +38,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         private Dictionary<string, HashSet<int>> newConnectionProperties = new Dictionary<string, HashSet<int>>();
         private Dictionary<string, HashSet<int>> newConnections = new Dictionary<string, HashSet<int>>();
         private HashSet<string> unloadedElements = new HashSet<string>();
-        private Options.SyncOption helperType;
+        private SyncOption helperType;
         private int currentInterfacesPropertyPID = -1;
         private int currentConnectionPropertyPID = -1;
         private int currentConnectionsPID = -1;
@@ -56,13 +50,13 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         private int localDMAID;
         private int localEleID;
         private string localElementKey;
-        private Dictionary<string, Collections.FastCollection<ConnectivityInterfaceProperty>> cachedInterfacePropertiesPerElement = new Dictionary<string, Collections.FastCollection<ConnectivityInterfaceProperty>>();
-        private Dictionary<string, Collections.FastCollection<ConnectivityInterface>> cachedInterfacesPerElement = new Dictionary<string, Collections.FastCollection<ConnectivityInterface>>();
-        private Dictionary<string, Collections.FastCollection<ConnectivityConnection>> cachedConnectionPerElement = new Dictionary<string, Collections.FastCollection<ConnectivityConnection>>();
-        private Dictionary<string, Collections.FastCollection<ConnectivityConnectionProperty>> cachedConnectionPropertiesPerElement = new Dictionary<string, Collections.FastCollection<ConnectivityConnectionProperty>>();
+        private Dictionary<string, FastCollection<ConnectivityInterfaceProperty>> cachedInterfacePropertiesPerElement = new Dictionary<string, FastCollection<ConnectivityInterfaceProperty>>();
+        private Dictionary<string, FastCollection<ConnectivityInterface>> cachedInterfacesPerElement = new Dictionary<string, FastCollection<ConnectivityInterface>>();
+        private Dictionary<string, FastCollection<ConnectivityConnection>> cachedConnectionPerElement = new Dictionary<string, FastCollection<ConnectivityConnection>>();
+        private Dictionary<string, FastCollection<ConnectivityConnectionProperty>> cachedConnectionPropertiesPerElement = new Dictionary<string, FastCollection<ConnectivityConnectionProperty>>();
         private HashSet<string> polledConnectionProperties = new HashSet<string>();
         private HashSet<string> polledInterfaceProperties = new HashSet<string>();
-        private Debug.DcfDebugLevel debugLevel = Debug.DcfDebugLevel.None;
+        private DcfDebugLevel debugLevel = DcfDebugLevel.None;
         private HashSet<string> checkedElements = new HashSet<string>();
 
         /// <summary>
@@ -73,50 +67,42 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="removalOptions">Options to configure how the object should deal with removed connections & properties.</param>
         /// <param name="debugLevel">Indicates how much debug logging should be performed.</param>
         //[DISCodeLibrary(Version = 1)]
-        private DcfHelper(SLProtocol protocol, int startupCheckPID, Options.DcfRemovalOptions removalOptions, Debug.DcfDebugLevel debugLevel = Debug.DcfDebugLevel.None)
+        private DcfHelper(SLProtocol protocol, int startupCheckPID, DcfRemovalOptions removalOptions, DcfDebugLevel debugLevel = DcfDebugLevel.None)
         {
             this.debugLevel = debugLevel;
-            Options.DcfMappingOptions options;
-            if (removalOptions is Options.DcfMappingOptions)
+
+            DcfMappingOptions options;
+              
+            // Changed multiple if statements into minimal amount of if statements needed
+
+            if (removalOptions is DcfMappingOptions)
             {
-                options = (Options.DcfMappingOptions)removalOptions;
+                options = (DcfMappingOptions)removalOptions;
             }
-            else if (removalOptions is Options.DcfRemovalOptionsAuto)
+            else if (removalOptions is DcfRemovalOptionsAuto || removalOptions is DcfRemovalOptionsBuffer || removalOptions is DcfRemovalOptionsManual)
             {
-                var tempOpt = (Options.DcfRemovalOptionsAuto)removalOptions;
-                options = new Options.DcfMappingOptions();
-                options.HelperType = (Options.SyncOption)tempOpt.HelperType;
-                options.PIDcurrentConnectionProperties = tempOpt.PIDcurrentConnectionProperties;
-                options.PIDcurrentConnections = tempOpt.PIDcurrentConnections;
-                options.PIDcurrentInterfaceProperties = tempOpt.PIDcurrentInterfaceProperties;
-            }
-            else if (removalOptions is Options.DcfRemovalOptionsBuffer)
-            {
-                var tempOpt = (Options.DcfRemovalOptionsBuffer)removalOptions;
-                options = new Options.DcfMappingOptions();
-                options.HelperType = (Options.SyncOption)tempOpt.HelperType;
-                options.PIDcurrentConnectionProperties = tempOpt.PIDcurrentConnectionProperties;
-                options.PIDcurrentConnections = tempOpt.PIDcurrentConnections;
-                options.PIDcurrentInterfaceProperties = tempOpt.PIDcurrentInterfaceProperties;
-                options.PIDnewConnectionProperties = tempOpt.PIDnewConnectionProperties;
-                options.PIDnewConnections = tempOpt.PIDnewConnections;
-                options.PIDnewInterfaceProperties = tempOpt.PIDnewInterfaceProperties;
-            }
-            else if (removalOptions is Options.DcfRemovalOptionsManual)
-            {
-                //Custom
-                var tempOpt = (Options.DcfRemovalOptionsManual)removalOptions;
-                options = new Options.DcfMappingOptions();
-                options.HelperType = (Options.SyncOption)tempOpt.HelperType;
-                options.PIDcurrentConnectionProperties = tempOpt.PIDcurrentConnectionProperties;
-                options.PIDcurrentConnections = tempOpt.PIDcurrentConnections;
-                options.PIDcurrentInterfaceProperties = tempOpt.PIDcurrentInterfaceProperties;
+                var tempOpt = (DcfMappingOptions)removalOptions;
+                options = new DcfMappingOptions
+                {
+                    HelperType = tempOpt.HelperType,
+                    PIDcurrentConnectionProperties = tempOpt.PIDcurrentConnectionProperties,
+                    PIDcurrentConnections = tempOpt.PIDcurrentConnections,
+                    PIDcurrentInterfaceProperties = tempOpt.PIDcurrentInterfaceProperties
+                };
+
+                if (removalOptions is DcfRemovalOptionsBuffer)
+                {
+                    options.PIDnewConnectionProperties = ((DcfRemovalOptionsBuffer)removalOptions).PIDnewConnectionProperties;
+                    options.PIDnewConnections = ((DcfRemovalOptionsBuffer)removalOptions).PIDnewConnections;
+                    options.PIDnewInterfaceProperties = ((DcfRemovalOptionsBuffer)removalOptions).PIDnewInterfaceProperties;
+                }
             }
             else
             {
-                //Default custom without mapping - shouldn't happen
-                options = new Options.DcfMappingOptions();
+                // Default custom without mapping - shouldn't happen
+                options = new DcfMappingOptions();
             }
+            
 
             this.protocol = protocol;
             helperType = options.HelperType;
@@ -129,7 +115,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
                 // StartupCheck == TRUE
                 // wait on SLElement to finish starting up.
 
-                DebugLog("QA" + protocol.QActionID + "|DCF STARTUP|Checking Startup: Main Element", LogType.Allways, LogLevel.NoLogging, Logs.DcfLogType.Setup);
+                DebugLog("QA" + protocol.QActionID + "|DCF STARTUP|Checking Startup: Main Element", LogType.Allways, LogLevel.NoLogging, DcfLogType.Setup);
 
                 if (!IsElementStarted(this.protocol, localDMAID, localEleID))
                 {
@@ -150,7 +136,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
 
                 if (!checkedElements.Contains(localDMAID + "/" + localEleID))
                 {
-                    DebugLog("QA" + protocol.QActionID + "|DCF STARTUP|Checking Startup: Main Element", LogType.Allways, LogLevel.NoLogging, Logs.DcfLogType.Setup);
+                    DebugLog("QA" + protocol.QActionID + "|DCF STARTUP|Checking Startup: Main Element", LogType.Allways, LogLevel.NoLogging, DcfLogType.Setup);
                     if (!IsElementStarted(this.protocol, localDMAID, localEleID))
                     {
                         protocol.Log(string.Format("QA{0}: |ERR: DCF Startup|(ElementStartupCheck) Value {1} at DCFHelper with ERROR:{2}", protocol.QActionID, "Main Element", "Element Start Check returned False"), LogType.Error, LogLevel.NoLogging);
@@ -203,7 +189,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="options">Options to configure how the object should deal with removed connections & properties.</param>
         /// <param name="debugLevel">Options to configure how the object should deal with removed connections & properties</param>
         //[DISCodeLibrary(Version = 1)]
-        private DcfHelper(SLProtocol protocol, bool startupCheck, Options.DcfRemovalOptions options, Debug.DcfDebugLevel debugLevel = Debug.DcfDebugLevel.None)
+        private DcfHelper(SLProtocol protocol, bool startupCheck, DcfRemovalOptions options, DcfDebugLevel debugLevel = DcfDebugLevel.None)
             : this(protocol, startupCheck ? -1 : -2, options, debugLevel)
         {
         }
@@ -215,7 +201,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="startupCheck">Indicates if Element startup checks need to be forcibly performed.</param>
         /// <param name="options">Options holding the mapping pids needed to deal with the chosen removal strategy.</param>
         /// <param name="debugLevel">Options to configure how the object should deal with removed connections & properties</param>
-        public DcfHelper(SLProtocol protocol, bool startupCheck, Options.DcfRemovalOptionsAuto options, Debug.DcfDebugLevel debugLevel = Debug.DcfDebugLevel.None)
+        public DcfHelper(SLProtocol protocol, bool startupCheck, DcfRemovalOptionsAuto options, DcfDebugLevel debugLevel = DcfDebugLevel.None)
         : this(protocol, startupCheck ? -1 : -2, options, debugLevel)
         {
         }
@@ -227,7 +213,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="startupCheck">Indicates if Element startup checks need to be forcibly performed.</param>
         /// <param name="options">Options holding the mapping pids needed to deal with the chosen removal strategy.</param>
         /// <param name="debugLevel">Options to configure how the object should deal with removed connections & properties</param>
-        public DcfHelper(SLProtocol protocol, bool startupCheck, Options.DcfRemovalOptionsBuffer options, Debug.DcfDebugLevel debugLevel = Debug.DcfDebugLevel.None)
+        public DcfHelper(SLProtocol protocol, bool startupCheck, DcfRemovalOptionsBuffer options, DcfDebugLevel debugLevel = DcfDebugLevel.None)
     : this(protocol, startupCheck ? -1 : -2, options, debugLevel)
         {
         }
@@ -239,7 +225,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="startupCheck">Indicates if Element startup checks need to be forcibly performed.</param>
         /// <param name="options">Options holding the mapping pids needed to deal with the chosen removal strategy.</param>
         /// <param name="debugLevel">Options to configure how the object should deal with removed connections & properties</param>
-        public DcfHelper(SLProtocol protocol, bool startupCheck, Options.DcfRemovalOptionsManual options, Debug.DcfDebugLevel debugLevel = Debug.DcfDebugLevel.None)
+        public DcfHelper(SLProtocol protocol, bool startupCheck, DcfRemovalOptionsManual options, DcfDebugLevel debugLevel = DcfDebugLevel.None)
     : this(protocol, startupCheck ? -1 : -2, options, debugLevel)
         {
         }
@@ -251,8 +237,8 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="startupCheck">A PID holding a mapping of all elements that were already checked for startup.</param>
         /// <param name="options">Options holding the mapping pids needed to deal with the chosen removal strategy.</param>
         /// <param name="debugLevel">Options to configure how the object should deal with removed connections & properties</param>
-        public DcfHelper(SLProtocol protocol, int startupCheck, Options.DcfRemovalOptionsAuto options, Debug.DcfDebugLevel debugLevel = Debug.DcfDebugLevel.None)
-: this(protocol, startupCheck, (Options.DcfRemovalOptions)options, debugLevel)
+        public DcfHelper(SLProtocol protocol, int startupCheck, DcfRemovalOptionsAuto options, DcfDebugLevel debugLevel = DcfDebugLevel.None)
+: this(protocol, startupCheck, (DcfRemovalOptions)options, debugLevel)
         {
         }
 
@@ -263,8 +249,8 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="startupCheck">A PID holding a mapping of all elements that were already checked for startup.</param>
         /// <param name="options">Options holding the mapping pids needed to deal with the chosen removal strategy.</param>
         /// <param name="debugLevel">Options to configure how the object should deal with removed connections & properties</param>
-        public DcfHelper(SLProtocol protocol, int startupCheck, Options.DcfRemovalOptionsBuffer options, Debug.DcfDebugLevel debugLevel = Debug.DcfDebugLevel.None)
-: this(protocol, startupCheck, (Options.DcfRemovalOptions)options, debugLevel)
+        public DcfHelper(SLProtocol protocol, int startupCheck, DcfRemovalOptionsBuffer options, DcfDebugLevel debugLevel = DcfDebugLevel.None)
+: this(protocol, startupCheck, (DcfRemovalOptions)options, debugLevel)
         {
         }
 
@@ -275,8 +261,8 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="startupCheck">A PID holding a mapping of all elements that were already checked for startup.</param>
         /// <param name="options">Options holding the mapping pids needed to deal with the chosen removal strategy.</param>
         /// <param name="debugLevel">Options to configure how the object should deal with removed connections & properties</param>
-        public DcfHelper(SLProtocol protocol, int startupCheck, Options.DcfRemovalOptionsManual options, Debug.DcfDebugLevel debugLevel = Debug.DcfDebugLevel.None)
-: this(protocol, startupCheck, (Options.DcfRemovalOptions)options, debugLevel)
+        public DcfHelper(SLProtocol protocol, int startupCheck, DcfRemovalOptionsManual options, DcfDebugLevel debugLevel = DcfDebugLevel.None)
+: this(protocol, startupCheck, (DcfRemovalOptions)options, debugLevel)
         {
         }
 
@@ -318,9 +304,9 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="UIDS">One or more DcfInterfaceFilter objects that identify a unique interface (can be both internal, external or a mix of both)</param>
         /// <returns>An array with DcfInterfaceResult Objects in the same order as the requested UIDS, if an Interface (or interfaces) was not found then this DcfInterfaceResult will be null! Be sure to check for 'null' values before using a result!</returns>
         //[DISCodeLibrary(Version = 1)]
-        public Interfaces.DcfInterfaceResult[] GetInterfaces(bool refresh, params Interfaces.DcfInterfaceFilter[] uids)
+        public DcfInterfaceResult[] GetInterfaces(bool refresh, params DcfInterfaceFilter[] uids)
         {
-            Interfaces.DcfInterfaceResult[] result = new Interfaces.DcfInterfaceResult[uids.Length];
+            DcfInterfaceResult[] result = new DcfInterfaceResult[uids.Length];
             HashSet<string> refreshed = new HashSet<string>();
             HashSet<string> refreshedProperties = new HashSet<string>();
             for (int i = 0; i < uids.Length; i++)
@@ -336,7 +322,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
 
                 try
                 {
-                    Collections.FastCollection<ConnectivityInterface> allInterfaces;
+                    FastCollection<ConnectivityInterface> allInterfaces;
                     if ((!cachedInterfacesPerElement.TryGetValue(uid.ElementKey, out allInterfaces) || refresh) && !refreshed.Contains(uid.ElementKey))
                     {
                         Dictionary<int, ConnectivityInterface> allInterfacesTmp;
@@ -355,7 +341,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
                             continue;
                         }
 
-                        allInterfaces = new Collections.FastCollection<ConnectivityInterface>(allInterfacesTmp.Values.ToArray());
+                        allInterfaces = new FastCollection<ConnectivityInterface>(allInterfacesTmp.Values.ToArray());
                         cachedInterfacesPerElement[uid.ElementKey] = allInterfaces;
                         refreshed.Add(uid.ElementKey);
                     }
@@ -410,7 +396,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
                         try
                         {
                             // Get All the properties
-                            Collections.FastCollection<ConnectivityInterfaceProperty> allProperties;
+                            FastCollection<ConnectivityInterfaceProperty> allProperties;
                             if ((!cachedInterfacePropertiesPerElement.TryGetValue(uid.ElementKey, out allProperties) || refresh) && !refreshedProperties.Contains(uid.ElementKey))
                             {
                                 Dictionary<int, ConnectivityInterfaceProperty> allPropsTmp = new Dictionary<int, ConnectivityInterfaceProperty>();
@@ -419,7 +405,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
                                     intf.InterfaceProperties.ToList().ForEach(x => allPropsTmp.Add(x.Key, x.Value));
                                 }
 
-                                allProperties = new Collections.FastCollection<ConnectivityInterfaceProperty>(allPropsTmp.Values.ToArray());
+                                allProperties = new FastCollection<ConnectivityInterfaceProperty>(allPropsTmp.Values.ToArray());
 
                                 cachedInterfacePropertiesPerElement[uid.ElementKey] = allProperties;
                                 refreshedProperties.Add(uid.ElementKey);
@@ -429,7 +415,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
                             Expression<Func<ConnectivityInterfaceProperty, object>> propertyIndexer = null;
                             Func<ConnectivityInterfaceProperty, object> indexerSearch = null;
 
-                            Filters.DcfPropertyFilter propFilter = uid.PropertyFilter;
+                            DcfPropertyFilter propFilter = uid.PropertyFilter;
                             if (propFilter.ID != -1)
                             {
                                 indexerSearch = p => p.InterfacePropertyId;
@@ -494,14 +480,14 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
                         }
                     }
 
-                    if (uid is Interfaces.DcfInterfaceFilterSingle)
+                    if (uid is DcfInterfaceFilterSingle)
                     {
-                        Interfaces.DcfInterfaceResultSingle newResult = new Interfaces.DcfInterfaceResultSingle(uid, uidInterfaces);
+                        DcfInterfaceResultSingle newResult = new DcfInterfaceResultSingle(uid, uidInterfaces);
                         result[i] = newResult;
                     }
                     else
                     {
-                        Interfaces.DcfInterfaceResultMulti newResult = new Interfaces.DcfInterfaceResultMulti(uid, uidInterfaces);
+                        DcfInterfaceResultMulti newResult = new DcfInterfaceResultMulti(uid, uidInterfaces);
                         result[i] = newResult;
                     }
                 }
@@ -522,7 +508,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="UIDS">One or more DcfInterfaceFilter structs that identify a unique interface (can be both internal, external or a mix of both)</param>
         /// <returns>An array with DCFDynamicLinkResult Objects in the same order as the requested UIDS, if an Interface (or interfaces) was not found then this DcfInterfaceResult will be null!</returns>
         //[DISCodeLibrary(Version = 1)]
-        public Interfaces.DcfInterfaceResult[] GetInterfaces(params Interfaces.DcfInterfaceFilter[] uids)
+        public DcfInterfaceResult[] GetInterfaces(params DcfInterfaceFilter[] uids)
         {
             return GetInterfaces(false, uids);
         }
@@ -536,7 +522,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="refresh">Indicates if it should forcibly refresh the internal cache of interfaces</param>
         /// <returns>A single ConnectivityInterface object, returns Null if not found.</returns>
         //[DISCodeLibrary(Version = 1)]
-        public ConnectivityInterface GetInterface(Interfaces.DcfInterfaceFilterSingle filter, bool refresh = false)
+        public ConnectivityInterface GetInterface(DcfInterfaceFilterSingle filter, bool refresh = false)
         {
             var result = GetInterfaces(refresh, filter);
             if (result[0] == null)
@@ -545,7 +531,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
             }
             else
             {
-                return ((Interfaces.DcfInterfaceResultSingle)GetInterfaces(refresh, filter)[0]).DCFInterface;
+                return ((DcfInterfaceResultSingle)GetInterfaces(refresh, filter)[0]).DCFInterface;
             }
         }
 
@@ -557,7 +543,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="refresh">Indicates if it should forcibly refresh the internal cache of interfaces</param>
         /// <returns>Multiple ConnectivityInterfaces matching the filter. Returns Null if none where found.</returns>
         //[DISCodeLibrary(Version = 1)]
-        public ConnectivityInterface[] GetInterfaces(Interfaces.DcfInterfaceFilterMulti filter, bool refresh = false)
+        public ConnectivityInterface[] GetInterfaces(DcfInterfaceFilterMulti filter, bool refresh = false)
         {
             var result = GetInterfaces(refresh, filter);
             if (result[0] == null)
@@ -566,7 +552,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
             }
             else
             {
-                return ((Interfaces.DcfInterfaceResultMulti)GetInterfaces(refresh, filter)[0]).DcfInterfaces;
+                return ((DcfInterfaceResultMulti)GetInterfaces(refresh, filter)[0]).DcfInterfaces;
             }
         }
 
@@ -578,10 +564,10 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="requests">One or more DCFConnectionFilter objects</param>
         /// <returns>An array of DCFConnectionResult objects in the same order as the requests. If one of the filter found nothing, that resultObject will be Null. Make sure to check for this.</returns>
         //[DISCodeLibrary(Version = 1)]
-        public Connections.DcfConnectionResult[] GetConnections(bool forceRefresh, params Connections.DcfConnectionFilter[] requests)
+        public DcfConnectionResult[] GetConnections(bool forceRefresh, params DcfConnectionFilter[] requests)
         {
             protocol.Log("QA" + protocol.QActionID + "|TEMP|1.1", LogType.Error, LogLevel.NoLogging);
-            Connections.DcfConnectionResult[] result = new Connections.DcfConnectionResult[requests.Length];
+            DcfConnectionResult[] result = new DcfConnectionResult[requests.Length];
             for (int i = 0; i < requests.Length; i++)
             {
                 //Default Values:
@@ -666,13 +652,13 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
                 string internalExternal;
                 switch (request.Type)
                 {
-                    case Connections.ConnectionType.Internal:
+                    case ConnectionType.Internal:
                         internalExternal = "I";
                         break;
-                    case Connections.ConnectionType.External:
+                    case ConnectionType.External:
                         internalExternal = "E";
                         break;
-                    case Connections.ConnectionType.Both:
+                    case ConnectionType.Both:
                         internalExternal = "B";
                         break;
                     default:
@@ -732,16 +718,16 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
                         continue;
                     }
 
-                    cachedConnectionPerElement[requestElementKey] = new Collections.FastCollection<ConnectivityConnection>(newPolledConnections.Values.ToList());
+                    cachedConnectionPerElement[requestElementKey] = new FastCollection<ConnectivityConnection>(newPolledConnections.Values.ToList());
                 }
                 protocol.Log("QA" + protocol.QActionID + "|TEMP|1.5", LogType.Error, LogLevel.NoLogging);
-                Collections.FastCollection<ConnectivityConnection> elementConnections = cachedConnectionPerElement[requestElementKey];
+                FastCollection<ConnectivityConnection> elementConnections = cachedConnectionPerElement[requestElementKey];
                 if (indexer != null && uniqueKey != null)
                 {
                     var foundConnections = elementConnections.FindValue(indexer, uniqueKey).ToArray();
                     if (foundConnections != null && foundConnections.Length > 0)
                     {
-                        result[i] = new Connections.DcfConnectionResult(request, elementConnections.FindValue(indexer, uniqueKey).ToArray());
+                        result[i] = new DcfConnectionResult(request, elementConnections.FindValue(indexer, uniqueKey).ToArray());
                     }
                     else
                     {
@@ -752,7 +738,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
                 {
                     if (elementConnections != null && elementConnections.Count() > 0)
                     {
-                        result[i] = new Connections.DcfConnectionResult(request, elementConnections.ToArray());
+                        result[i] = new DcfConnectionResult(request, elementConnections.ToArray());
                     }
                     else
                     {
@@ -779,7 +765,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="requests">One or more DCFConnectionFilter objects</param>
         /// <returns>An array of DCFConnectionResult objects in the same order as the requests. If one of the filter found nothing, that resultObject will be Null. Make sure to check for this.</returns>
         //[DISCodeLibrary(Version = 1)]
-        public Connections.DcfConnectionResult[] GetConnections(params Connections.DcfConnectionFilter[] requests)
+        public DcfConnectionResult[] GetConnections(params DcfConnectionFilter[] requests)
         {
             return GetConnections(false, requests);
         }
@@ -791,7 +777,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="request">One DCFConnectionFilter objects where you expect one or more ConnectivityConnections as a result.</param>
         /// <returns>An array of ConnectivityConnection objects in the same order as the requests. If the filter found nothing, the returned array will be Null. Make sure to check for this.</returns>
         //[DISCodeLibrary(Version = 1)]
-        public ConnectivityConnection[] GetConnections(Connections.DcfConnectionFilter request)
+        public ConnectivityConnection[] GetConnections(DcfConnectionFilter request)
         {
             var connectionResult = GetConnections(false, request)[0];
             return connectionResult != null ? connectionResult.Connections : null;
@@ -804,7 +790,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="request">One DCFConnectionFilter objects where you expect one ConnectivityConnection object as a result.</param>
         /// <returns>A single ConnectivityConnection object that matches your request. Returns Null if no connection was found matching the filter.</returns>
         //[DISCodeLibrary(Version = 1)]
-        public ConnectivityConnection GetConnection(Connections.DcfConnectionFilter request)
+        public ConnectivityConnection GetConnection(DcfConnectionFilter request)
         {
             protocol.Log("QA" + protocol.QActionID + "|TEMP|1", LogType.Error, LogLevel.NoLogging);
             var connectionResult = GetConnections(false, request)[0];
@@ -820,12 +806,12 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="requests">One or more DCFSaveConnectionRequest objects that define the connection you wish to save</param>
         /// <returns>One or more DCFSaveConnectionResults in the same order as the DCFSaveConnectionRequests. If a Connection fails to get created or if you use Async then the connections inside the DCFSaveConnectionResult will be null.</returns>
         //[DISCodeLibrary(Version = 1)]
-        public Connections.DcfSaveConnectionResult[] SaveConnections(bool forceRefresh, params Connections.DcfSaveConnectionRequest[] requests)
+        public DcfSaveConnectionResult[] SaveConnections(bool forceRefresh, params DcfSaveConnectionRequest[] requests)
         {
-            Connections.DcfSaveConnectionResult[] result = new Connections.DcfSaveConnectionResult[requests.Length];
+            DcfSaveConnectionResult[] result = new DcfSaveConnectionResult[requests.Length];
             for (int i = 0; i < requests.Length; i++)
             {
-                Connections.DcfSaveConnectionRequest currentRequest = requests[i];
+                DcfSaveConnectionRequest currentRequest = requests[i];
                 // Make sure, if properties are requested. The save is sync.
                 if (currentRequest.PropertyRequests != null)
                 {
@@ -835,7 +821,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
                     }
                 }
 
-                result[i] = new Connections.DcfSaveConnectionResult(null, null, false, true, null);
+                result[i] = new DcfSaveConnectionResult(null, null, false, true, null);
                 bool updated = true;
                 if (currentRequest == null)
                 {
@@ -880,11 +866,11 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
                             continue;
                         }
 
-                        cachedConnectionPerElement[sourceElementKey] = new Collections.FastCollection<ConnectivityConnection>(newPolledConnections.Values.ToList());
+                        cachedConnectionPerElement[sourceElementKey] = new FastCollection<ConnectivityConnection>(newPolledConnections.Values.ToList());
                     }
 
                     string uniqueKey;
-                    Collections.FastCollection<ConnectivityConnection> elementConnections = cachedConnectionPerElement[sourceElementKey];
+                    FastCollection<ConnectivityConnection> elementConnections = cachedConnectionPerElement[sourceElementKey];
                     Expression<Func<ConnectivityConnection, object>> indexer;
                     switch (currentRequest.ConnectionType)
                     {
@@ -916,102 +902,99 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
                     ConnectivityConnection newDestinationConnection = null;
                     int sourceId = -1;
                     int destinationId = -1;
+                    bool connectionUpdated = true;
+
+                    string connectionType = internalConnection ? "Internal" : "External";
+                    string sourceKey = currentRequest.Source.ElementKey;
+                    string destinationKey = currentRequest.Destination.ElementKey;
+
+                    string logMessage = $"QA{protocol.QActionID}|DCF Connection|Adding {connectionType} Connection:{currentRequest.CustomName} | With Connection Filter: {currentRequest.ConnectionFilter}";
+
+                    if (!internalConnection)
+                    {
+                        logMessage += $" | from Element:{sourceKey} To Element:{destinationKey}";
+                    }
+
+                    DebugLog(logMessage, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+                    bool operationResult = false;
+
                     if (matchingConnection == null)
                     {
                         // Add a new Connection
-                        if (internalConnection)
+                        if (!currentRequest.Async)
                         {
-                            DebugLog("QA" + protocol.QActionID + "|DCF Connection|Adding Internal Connection:" + currentRequest.CustomName + " | With Connection Filter: " + currentRequest.ConnectionFilter + " | on Element:" + currentRequest.Source.ElementKey, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
-
-                            // add an internal connection
-                            if (!currentRequest.Async)
-                            {
-                                if (!currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName, currentRequest.Destination, currentRequest.ConnectionFilter, false, out matchingConnection, out newDestinationConnection, 420000))
-                                {
-                                    protocol.Log(string.Format("QA{0}: |ERR: DCF Connection|Adding Internal DCF Connection -sync:{1} on element {2} Timed-Out after 7 minutes or returned false. Connection may not have been added", protocol.QActionID, currentRequest.CustomName, sourceElementKey), LogType.Error, LogLevel.NoLogging);
-                                }
-
-                                if (matchingConnection != null) sourceId = matchingConnection.ConnectionId;
-                                if (newDestinationConnection != null) destinationId = newDestinationConnection.ConnectionId;
-                            }
-                            else
-                            {
-                                if (!currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName, currentRequest.Destination, currentRequest.ConnectionFilter, false, out sourceId, out destinationId))
-                                {
-                                    protocol.Log(string.Format("QA{0}: |ERR: DCF Connection|Adding Internal DCF Connection -async:{1} on element {2} returned false. Connection may not have been added", protocol.QActionID, currentRequest.CustomName, sourceElementKey), LogType.Error, LogLevel.NoLogging);
-                                }
-                            }
+                            operationResult = internalConnection
+                                ? currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName, currentRequest.Destination, currentRequest.ConnectionFilter, false, out matchingConnection, out newDestinationConnection, 420000)
+                                : currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName + " -RETURN", currentRequest.Destination, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out matchingConnection, out newDestinationConnection, 420000);
                         }
                         else
                         {
-                            DebugLog("QA" + protocol.QActionID + "|DCF Connection|Adding External Connection:" + currentRequest.CustomName + " | With Connection Filter: " + currentRequest.ConnectionFilter + " | from Element:" + currentRequest.Source.ElementKey + " To Element:" + currentRequest.Destination.ElementKey, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+                            operationResult = internalConnection
+                                ? currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName, currentRequest.Destination, currentRequest.ConnectionFilter, false, out sourceId, out destinationId)
+                                : currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName + " -RETURN", currentRequest.Destination, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out sourceId, out destinationId);
+                        }
 
-                            // add an external connection
-                            if (!currentRequest.Async)
-                            {
-                                if (!currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName + " -RETURN", currentRequest.Destination, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out matchingConnection, out newDestinationConnection, 420000))
-                                {
-                                    protocol.Log(string.Format("QA{0}:|ERR: DCF Connection|Adding External DCF Connection:{1} from element {2} to element {3} Timed-Out after 7 minutes or returned false. Connection may not have been added", protocol.QActionID, currentRequest.CustomName, sourceElementKey, currentRequest.Destination), LogType.Error, LogLevel.NoLogging);
-                                }
-                                if (matchingConnection != null) sourceId = matchingConnection.ConnectionId;
-                                if (newDestinationConnection != null) destinationId = newDestinationConnection.ConnectionId;
-                            }
-                            else
-                            {
-                                if (!currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName + " -RETURN", currentRequest.Destination, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out sourceId, out destinationId))
-                                {
-                                    protocol.Log(string.Format("QA{0}: |ERR: DCF Connection|Adding Internal DCF Connection -async:{1} on element {2} returned false. Connection may not have been added", protocol.QActionID, currentRequest.CustomName, sourceElementKey), LogType.Error, LogLevel.NoLogging);
-                                }
-                            }
+                        if (!operationResult)
+                        {
+                            string logErrorType = internalConnection ? "-sync" : "-async";
+                            string logErrorMessage = internalConnection
+                                ? $"QA{protocol.QActionID}: |ERR: DCF Connection|Adding {connectionType} DCF Connection{logErrorType}:{currentRequest.CustomName} on element {sourceKey} Timed-Out after 7 minutes or returned false. Connection may not have been added"
+                                : $"QA{protocol.QActionID}:|ERR: DCF Connection|Adding External DCF Connection:{currentRequest.CustomName} from element {sourceKey} to element {destinationKey} Timed-Out after 7 minutes or returned false. Connection may not have been added";
+
+                            protocol.Log(logErrorMessage, LogType.Error, LogLevel.NoLogging);
                         }
                     }
                     else
                     {
                         // Update the Connection
-                        // Check if Update is Necessary
-                        if (
-                            matchingConnection.ConnectionName == currentRequest.CustomName
-                            && matchingConnection.SourceDataMinerId + "/" + matchingConnection.SourceElementId == currentRequest.Source.ElementKey
-                            && matchingConnection.SourceInterfaceId == currentRequest.Source.InterfaceId
-                            && matchingConnection.DestinationDMAId + "/" + matchingConnection.DestinationEId == currentRequest.Destination.ElementKey
-                            && matchingConnection.DestinationInterfaceId == currentRequest.Destination.InterfaceId
-                            && matchingConnection.ConnectionFilter == currentRequest.ConnectionFilter)
-                        {
-                            // NO UPDATE NECESSARY
-                            updated = false;
+                        bool updateRequired = matchingConnection.ConnectionName != currentRequest.CustomName ||
+                            matchingConnection.SourceDataMinerId + "/" + matchingConnection.SourceElementId != sourceKey ||
+                            matchingConnection.SourceInterfaceId != currentRequest.Source.InterfaceId ||
+                            matchingConnection.DestinationDMAId + "/" + matchingConnection.DestinationEId != destinationKey ||
+                            matchingConnection.DestinationInterfaceId != currentRequest.Destination.InterfaceId ||
+                            matchingConnection.ConnectionFilter != currentRequest.ConnectionFilter;
 
-                            if (internalConnection)
-                            {
-                                DebugLog("QA" + protocol.QActionID + "|DCF Connection (" + matchingConnection.ConnectionId + ") |Not Updating Internal Connection (ID:" + matchingConnection.ConnectionId + ") To:" + currentRequest.CustomName + " on Element:" + currentRequest.Source.ElementKey + "-- No Change Detected", LogType.Allways, LogLevel.NoLogging, DcfLogType.Same);
-                            }
-                            else
-                            {
-                                DebugLog("QA" + protocol.QActionID + "|DCF Connection (" + matchingConnection.ConnectionId + ") |Not Updating External Connection (ID:" + matchingConnection.ConnectionId + ") To:" + currentRequest.CustomName + " from Element:" + currentRequest.Source.ElementKey + " To Element:" + currentRequest.Destination.ElementKey + "-- No Change Detected", LogType.Allways, LogLevel.NoLogging, DcfLogType.Same);
-                            }
+                        if (!updateRequired)
+                        {
+                            connectionUpdated = false;
+                            string logMessageType = internalConnection ? "Internal" : "External";
+                            string logMessageSame = internalConnection
+                                ? $"QA{protocol.QActionID}|DCF Connection ({matchingConnection.ConnectionId}) | Not Updating {logMessageType} Connection (ID:{matchingConnection.ConnectionId}) To:{currentRequest.CustomName} on Element:{sourceKey} -- No Change Detected"
+                                : $"QA{protocol.QActionID}|DCF Connection ({matchingConnection.ConnectionId}) | Not Updating {logMessageType} Connection (ID:{matchingConnection.ConnectionId}) To:{currentRequest.CustomName} from Element:{sourceKey} To Element:{destinationKey} -- No Change Detected";
+
+                            DebugLog(logMessageSame, LogType.Allways, LogLevel.NoLogging, DcfLogType.Same);
                         }
                         else
                         {
-                            // UPDATE NECESSARY
-                            if (internalConnection)
+                            string logMessageType = internalConnection ? "Internal" : "External";
+                            string logMessageChange = internalConnection
+                                ? $"QA{protocol.QActionID}|DCF Connection ({matchingConnection.ConnectionId}) | Updating {logMessageType} Connection (ID:{matchingConnection.ConnectionId}) To:{currentRequest.CustomName} | With Connection Filter: {currentRequest.ConnectionFilter} | on Element:{sourceKey}"
+                                : $"QA{protocol.QActionID}|DCF Connection ({matchingConnection.ConnectionId}) | Updating {logMessageType} Connection (ID:{matchingConnection.ConnectionId}) To:{currentRequest.CustomName} | With Connection Filter: {currentRequest.ConnectionFilter} | from Element:{sourceKey} To Element:{destinationKey}";
+
+                            DebugLog(logMessageChange, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+                            operationResult = internalConnection
+                                ? matchingConnection.Update(currentRequest.CustomName, currentRequest.Source.InterfaceId, currentRequest.CustomName, currentRequest.Destination.DataMinerId, currentRequest.Destination.ElementId, currentRequest.Destination.InterfaceId, currentRequest.ConnectionFilter, false, out newDestinationConnection, 420000)
+                                : matchingConnection.Update(currentRequest.CustomName, currentRequest.Source.InterfaceId, currentRequest.CustomName + " -RETURN", currentRequest.Destination.DataMinerId, currentRequest.Destination.ElementId, currentRequest.Destination.InterfaceId, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out newDestinationConnection, 420000);
+
+                            if (!operationResult)
                             {
-                                DebugLog("QA" + protocol.QActionID + "|DCF Connection (" + matchingConnection.ConnectionId + ") |Updating Internal Connection (ID:" + matchingConnection.ConnectionId + ") To:" + currentRequest.CustomName + " | With Connection Filter: " + currentRequest.ConnectionFilter + " | on Element:" + currentRequest.Source.ElementKey, LogType.Allways, LogLevel.NoLogging, Logs.DcfLogType.Change);
-                                if (!matchingConnection.Update(currentRequest.CustomName, currentRequest.Source.InterfaceId, currentRequest.CustomName, currentRequest.Destination.DataMinerId, currentRequest.Destination.ElementId, currentRequest.Destination.InterfaceId, currentRequest.ConnectionFilter, false, out newDestinationConnection, 420000))
-                                {
-                                    protocol.Log(string.Format("QA{0}:|ERR: DCF Connection (" + matchingConnection.ConnectionId + ") | Updating Internal DCF Connection:{1} on element {2} Timed-Out after 7 minutes or returned false. Connection may not have been updated", protocol.QActionID, currentRequest.CustomName, sourceElementKey), LogType.Error, LogLevel.NoLogging);
-                                }
-                            }
-                            else
-                            {
-                                DebugLog("QA" + protocol.QActionID + "|DCF Connection (" + matchingConnection.ConnectionId + ") |Updating External Connection (ID:" + matchingConnection.ConnectionId + ") To:" + currentRequest.CustomName + " | With Connection Filter: " + currentRequest.ConnectionFilter + " | from Element:" + currentRequest.Source.ElementKey + " To Element:" + currentRequest.Destination.ElementKey, LogType.Allways, LogLevel.NoLogging, DcfLogType.Same);
-                                if (!matchingConnection.Update(currentRequest.CustomName, currentRequest.Source.InterfaceId, currentRequest.CustomName + " -RETURN", currentRequest.Destination.DataMinerId, currentRequest.Destination.ElementId, currentRequest.Destination.InterfaceId, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out newDestinationConnection, 420000))
-                                {
-                                    protocol.Log(string.Format("QA{0}:|ERR: DCF Connection (" + matchingConnection.ConnectionId + ") | Updating External DCF Connection:{1} from element {2} to element {3} Timed-Out after 7 minutes or returned false. Connection may not have been updated", protocol.QActionID, currentRequest.CustomName, sourceElementKey, currentRequest.Destination.ElementKey), LogType.Error, LogLevel.NoLogging);
-                                }
+                                string logErrorType = internalConnection ? "Internal" : "External";
+                                string logErrorMessage = internalConnection
+                                    ? $"QA{protocol.QActionID}|ERR: DCF Connection ({matchingConnection.ConnectionId}) | Updating {logErrorType} DCF Connection:{currentRequest.CustomName} on element {sourceKey} Timed-Out after 7 minutes or returned false. Connection may not have been updated"
+                                    : $"QA{protocol.QActionID}|ERR: DCF Connection ({matchingConnection.ConnectionId}) | Updating {logErrorType} DCF Connection:{currentRequest.CustomName} from element {sourceKey} to element {destinationKey} Timed-Out after 7 minutes or returned false. Connection may not have been updated";
+
+                                protocol.Log(logErrorMessage, LogType.Error, LogLevel.NoLogging);
                             }
                         }
-                        if (matchingConnection != null) sourceId = matchingConnection.ConnectionId;
-                        if (newDestinationConnection != null) destinationId = newDestinationConnection.ConnectionId;
                     }
+
+                    if (matchingConnection != null) sourceId = matchingConnection.ConnectionId;
+                    if (newDestinationConnection != null) destinationId = newDestinationConnection.ConnectionId;
+
+
+
                     protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|4", LogType.Error, LogLevel.NoLogging);
                     string inpEleKye = CreateElementKey(currentRequest.Source.DataMinerId, currentRequest.Source.ElementId);
                     if (currentRequest.FixedConnection)
@@ -1319,7 +1302,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
 
             bool externalConnection = connection.SourceDataMinerId != connection.DestinationDMAId || connection.SourceElementId != connection.DestinationEId;
             string connectionIdentifier = connection.ConnectionId + "-" + connection.SourceDataMinerId + "/" + connection.SourceElementId;
-            Comparers.CustomComparer<ConnectivityConnectionProperty> propertyIdentifier = new Comparers.CustomComparer<ConnectivityConnectionProperty>(p => p.ConnectionPropertyId);
+            CustomComparer<ConnectivityConnectionProperty> propertyIdentifier = new CustomComparer<ConnectivityConnectionProperty>(p => p.ConnectionPropertyId);
             string element = connection.SourceDataMinerId + "/" + connection.SourceElementId;
 
             if (!IsElementStarted(protocol, element))
@@ -1328,13 +1311,13 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
                 return result;
             }
 
-            Collections.FastCollection<ConnectivityConnectionProperty> connectionProperties;
+            FastCollection<ConnectivityConnectionProperty> connectionProperties;
             // Retrieve all properties for this connection in a single call, if they haven't already been called earlier.
             // Check if anything for the element has ever been retrieved
             if (!cachedConnectionPropertiesPerElement.TryGetValue(element, out connectionProperties))
             {
                 var itfProps = connection.ConnectionProperties;
-                connectionProperties = new Collections.FastCollection<ConnectivityConnectionProperty>(itfProps.Values.ToList());
+                connectionProperties = new FastCollection<ConnectivityConnectionProperty>(itfProps.Values.ToList());
                 itfProps = null;
                 cachedConnectionPropertiesPerElement.Add(element, connectionProperties);
             }
@@ -1473,7 +1456,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="requests">A list of ConnectionPropertyRequests</param>
         /// <returns>An array of SaveConnectionPropertyResults in the same order as the requests. If one of the Saves failed, the returned object will indicate Success: false.</returns>
         //[DISCodeLibrary(Version = 1)]
-        public Connections.DcfSaveConnectionPropertyResult[] SaveConnectionProperties(ConnectivityConnection connection, params Connections.DcfSaveConnectionPropertyRequest[] requests)
+        public DcfSaveConnectionPropertyResult[] SaveConnectionProperties(ConnectivityConnection connection, params DcfSaveConnectionPropertyRequest[] requests)
         {
             return SaveConnectionProperties(false, connection, requests);
         }
@@ -1508,7 +1491,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
             }
 
             string interfaceIdentifier = connectivityInterface.InterfaceId + "-" + connectivityInterface.DataMinerId + "/" + connectivityInterface.ElementId;
-            Comparers.CustomComparer<ConnectivityInterfaceProperty> propertyIdentifier = new Comparers.CustomComparer<ConnectivityInterfaceProperty>(p => p.InterfacePropertyId);
+            CustomComparer<ConnectivityInterfaceProperty> propertyIdentifier = new CustomComparer<ConnectivityInterfaceProperty>(p => p.InterfacePropertyId);
             string element = connectivityInterface.DataMinerId + "/" + connectivityInterface.ElementId;
 
             if (!IsElementStarted(protocol, element))
@@ -1517,13 +1500,13 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
                 return result;
             }
 
-            Collections.FastCollection<ConnectivityInterfaceProperty> interfaceProperties;
+            FastCollection<ConnectivityInterfaceProperty> interfaceProperties;
             // Retrieve all properties for this interface in a single call, if they haven't already been called earlier.
             // Check if anything for the element has ever been retrieved
             if (!cachedInterfacePropertiesPerElement.TryGetValue(element, out interfaceProperties))
             {
                 var itfProps = connectivityInterface.InterfaceProperties;
-                interfaceProperties = new Collections.FastCollection<ConnectivityInterfaceProperty>(itfProps.Values.ToList());
+                interfaceProperties = new FastCollection<ConnectivityInterfaceProperty>(itfProps.Values.ToList());
                 itfProps = null;
                 cachedInterfacePropertiesPerElement.Add(element, interfaceProperties);
             }
@@ -2048,7 +2031,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
 
                 if (interfacesPresent)
                 {
-                    var allInterfaces = new Collections.FastCollection<ConnectivityInterface>(interfacesDictionary.Values.ToArray());
+                    var allInterfaces = new FastCollection<ConnectivityInterface>(interfacesDictionary.Values.ToArray());
                     cachedInterfacesPerElement[localElementKey] = allInterfaces;
                 }
             }
@@ -2285,7 +2268,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
         /// <param name="type">The type parameter</param>
         /// <returns>The string type object</returns>  
         //[DISCodeLibrary(Version = 1)]
-        private string InternalExternalChar(ConnectivityConnection p, Connections.ConnectionType type)
+        private string InternalExternalChar(ConnectivityConnection p, ConnectionType type)
         {
             if (type == ConnectionType.Both)
             {
