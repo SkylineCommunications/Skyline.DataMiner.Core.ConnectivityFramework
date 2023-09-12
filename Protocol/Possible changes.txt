@@ -1,4 +1,4 @@
-﻿Changes to the 900-1000 lines of code
+﻿Changes to the 900-1000 lines of code before, now is 900-994
 
 ConnectivityConnection matchingConnection = elementConnections.FindValue(indexer, uniqueKey).FirstOrDefault();
 ConnectivityConnection newDestinationConnection = null;
@@ -96,6 +96,83 @@ if (matchingConnection != null) sourceId = matchingConnection.ConnectionId;
 if (newDestinationConnection != null) destinationId = newDestinationConnection.ConnectionId;
 
 
+FULL UPDATE 809-1052
+
+ HashSet<int> uniqueConnectionIDs = new HashSet<int>(connectionIDs);
+
+                foreach(int connectionID in uniqueConnectionIDs)
+                {
+                    var con = input.GetConnectionById(connectionID);
+
+                    if(!force &&
+                       !managedCurrentByThisProtocol.Contains(connectionID) &&
+                       !managedCurrentByThisProtocol.Contains(-connectionID) &&
+                       !managedNewByThisProtocol.Contains(connectionID) &&
+                       !managedNewByThisProtocol.Contains(-connectionID))
+                    {
+                        continue;
+                    }
+
+                    DebugLog($"QA{protocol.QActionID}|DCF Connection ({con.ConnectionId})|Deleting Connection:{con.ConnectionName}", LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+                    if(input.DeleteConnection(connectionID, bothConnections))
+                    {
+                        managedNewByThisProtocol.Remove(connectionID);
+                        managedCurrentByThisProtocol.Remove(connectionID);
+                        managedNewByThisProtocol.Remove(-connectionID);
+                        managedCurrentByThisProtocol.Remove(-connectionID);
+                    }
+
+                    else
+                    {
+                        protocol.Log($"QA{protocol.QActionID}:|ERR: DCF Connection ({connectionID})|Removing DCF Connection:{con.ConnectionName} Returned False. Connection may not have been Removed", LogType.Error, LogLevel.NoLogging);
+                        finalResult = false;
+                    }
+                }
+
+
+try
+{
+    long millisecondsToWait = secondsToWait * 1000;
+    long startTime = sw.ElapsedMilliseconds;
+
+    while (!interfacesPresent && sw.ElapsedMilliseconds - startTime < millisecondsToWait)
+    {
+        try
+        {
+            interfacesDictionary = protocol.GetConnectivityInterfaces(localDMAID, localEleID);
+            HashSet<string> allInterfaceKeys = new HashSet<string>(interfacesDictionary
+                .Where(p => p.Value.ElementKey == thisElementKey && p.Value.DynamicLink == parameterGroupID)
+                .Select(p => p.Value.DynamicPK));
+
+            bool currentInterfacesPresent = oKeys.Length == allInterfaceKeys.Count && oKeys.All(oKey => allInterfaceKeys.Contains(Convert.ToString(oKey)));
+
+            if (!currentInterfacesPresent)
+            {
+                Thread.Sleep(threadSleepMilliseconds);
+            }
+            else
+            {
+                interfacesPresent = true;
+            }
+        }
+        catch (Exception e)
+        {
+            protocol.Log(string.Format("QA{0}:|ERR: DCF Interface|(Exception) at {1} CheckInterfacesReady: While Loop with Exception:{2}", protocol.QActionID, sw.ElapsedMilliseconds, e.ToString()), LogType.Error, LogLevel.NoLogging);
+            // Consider adding a retry mechanism here if exceptions are expected.
+        }
+    }
+
+    if (interfacesPresent)
+    {
+        var allInterfaces = new FastCollection<ConnectivityInterface>(interfacesDictionary.Values.ToArray());
+        cachedInterfacesPerElement[localElementKey] = allInterfaces;
+    }
+}
+catch (Exception e)
+{
+    protocol.Log(string.Format("QA{0}:|ERR: DCF Interface|(Exception) at CheckInterfacesReady with Exception:{1}", protocol.QActionID, e.ToString()), LogType.Error, LogLevel.NoLogging);
+}
 
 
 

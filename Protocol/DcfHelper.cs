@@ -1163,7 +1163,40 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                     managedCurrentByThisProtocol = new HashSet<int>();
                 }
 
-                for (int u = 0; u < connectionIDs.Length; u++)
+                //Optimized ver
+                HashSet<int> uniqueConnectionIDs = new HashSet<int>(connectionIDs);
+
+                foreach(int connectionID in uniqueConnectionIDs)
+                {
+                    var con = input.GetConnectionById(connectionID);
+
+                    if(!force &&
+                       !managedCurrentByThisProtocol.Contains(connectionID) &&
+                       !managedCurrentByThisProtocol.Contains(-connectionID) &&
+                       !managedNewByThisProtocol.Contains(connectionID) &&
+                       !managedNewByThisProtocol.Contains(-connectionID))
+                    {
+                        continue;
+                    }
+
+                    DebugLog($"QA{protocol.QActionID}|DCF Connection ({con.ConnectionId})|Deleting Connection:{con.ConnectionName}", LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+                    if(input.DeleteConnection(connectionID, bothConnections))
+                    {
+                        managedNewByThisProtocol.Remove(connectionID);
+                        managedCurrentByThisProtocol.Remove(connectionID);
+                        managedNewByThisProtocol.Remove(-connectionID);
+                        managedCurrentByThisProtocol.Remove(-connectionID);
+                    }
+
+                    else
+                    {
+                        protocol.Log($"QA{protocol.QActionID}:|ERR: DCF Connection ({connectionID})|Removing DCF Connection:{con.ConnectionName} Returned False. Connection may not have been Removed", LogType.Error, LogLevel.NoLogging);
+                        finalResult = false;
+                    }
+                }
+
+                /*for (int u = 0; u < connectionIDs.Length; u++)
                 {
                     var con = input.GetConnectionById(connectionIDs[u]);
                     if (force || managedCurrentByThisProtocol.Contains(connectionIDs[u]) || managedCurrentByThisProtocol.Contains(-1 * connectionIDs[u]) || managedNewByThisProtocol.Contains(connectionIDs[u]) || managedNewByThisProtocol.Contains(-1 * connectionIDs[u]))
@@ -1183,7 +1216,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                             finalResult = false;
                         }
                     }
-                }
+                }*/
 
                 newConnections[eleKey] = managedNewByThisProtocol;
                 currentConnections[eleKey] = managedCurrentByThisProtocol;
@@ -1239,7 +1272,36 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                     managedCurrentByThisProtocol = new HashSet<int>();
                 }
 
-                for (int u = 0; u < connectionIDs.Length; u++)
+                //Optimized
+
+                for(int i = 0; i< connectionIDs.Length; i++)
+                {
+                    int connectionID = connectionIDs[i];
+                    int negconnectionID = -connectionIDs[i];
+
+                    if (force || managedCurrentByThisProtocol.Contains(connectionID) || managedCurrentByThisProtocol.Contains(negconnectionID) || managedNewByThisProtocol.Contains(connectionID) || managedNewByThisProtocol.Contains(negconnectionID))
+                    {
+                        string logMessage = $"QA{protocol.QActionID}|DCF Connection ({connectionID}) | Deleteing COnnection:{connectionID}";
+
+                        DebugLog(logMessage, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+                        if (protocol.DeleteConnectivityConnection(connectionID, dataMinerID, elementID, bothConnections))
+                        {
+                            managedNewByThisProtocol.Remove(connectionID);
+                            managedCurrentByThisProtocol.Remove(connectionID);
+                        }
+                        else
+                        {
+                            string errorMessage = $"QA{protocol.QActionID}: |ERR: DCF Connection ({connectionID})| Removing DCF Connection: {connectionID} Returned False. Connection may not have been removed";
+
+                            protocol.Log(errorMessage, LogType.Error, LogLevel.NoLogging);
+                            finalResult = false;
+                        }
+                    }
+                }
+
+
+                /*for (int u = 0; u < connectionIDs.Length; u++)
                 {
                     if (force || managedCurrentByThisProtocol.Contains(connectionIDs[u]) || managedCurrentByThisProtocol.Contains(-1 * connectionIDs[u]) || managedNewByThisProtocol.Contains(connectionIDs[u]) || managedNewByThisProtocol.Contains(-1 * connectionIDs[u]))
                     {
@@ -1256,7 +1318,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                             finalResult = false;
                         }
                     }
-                }
+                }*/
 
                 newConnections[eleKey] = managedNewByThisProtocol;
                 currentConnections[eleKey] = managedCurrentByThisProtocol;
@@ -1328,6 +1390,8 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                 connectionProperties.Add(itfProps.Values.ToList(), propertyIdentifier);
             }
 
+            //No optimization needed
+
             List<ConnectivityConnectionProperty> allNewAdded = new List<ConnectivityConnectionProperty>();
             for (int i = 0; i < requests.Length; i++)
             {
@@ -1357,6 +1421,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                 var prop = connectionProperties.FindValue(indexer, uniqueKey).FirstOrDefault();
 
                 ConnectivityConnectionProperty newConnectProp = new ConnectivityConnectionProperty { Connection = connection, ConnectionPropertyName = currentRequest.Name, ConnectionPropertyType = currentRequest.Type, ConnectionPropertyValue = currentRequest.Value };
+
 
                 if (prop == null)
                 {
@@ -1700,6 +1765,36 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                 {
                     managedCurrentByThisProtocol = new HashSet<int>();
                 }
+
+                /*foreach (int propertyID in propertyIDs)
+                {
+                    bool shouldDeleteProperty = force ||
+                        managedNewByThisProtocol.Contains(propertyID) ||
+                        managedNewByThisProtocol.Contains(-propertyID) ||
+                        managedCurrentByThisProtocol.Contains(propertyID) ||
+                        managedCurrentByThisProtocol.Contains(-propertyID);
+
+                    if (shouldDeleteProperty)
+                    {
+                        DebugLog("QA" + protocol.QActionID + "|DCF Connection Property (" + propertyID + ")|Deleting Connection Property:" + propertyID, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+                        if (!connection.DeleteProperty(propertyID))
+                        {
+                            success = false;
+                            protocol.Log(string.Format("QA{0}:|ERR: DCF Connection Property (" + propertyID + ")| Removing Connection Property:{1} Returned False! Property may not have been Removed!", protocol.QActionID, propertyID), LogType.Error, LogLevel.NoLogging);
+                        }
+                        else
+                        {
+                            // Remove the propertyID and its negative counterpart from the sets
+                            managedCurrentByThisProtocol.Remove(propertyID);
+                            managedNewByThisProtocol.Remove(propertyID);
+                            managedCurrentByThisProtocol.Remove(-propertyID);
+                            managedNewByThisProtocol.Remove(-propertyID);
+                        }
+                    }
+                }*/
+
+
 
                 foreach (int propertyID in propertyIDs)
                 {
