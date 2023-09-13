@@ -70,39 +70,49 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
         private DcfHelper(SLProtocol protocol, int startupCheckPID, DcfRemovalOptions removalOptions, DcfDebugLevel debugLevel = DcfDebugLevel.None)
         {
             this.debugLevel = debugLevel;
-
             DcfMappingOptions options;
-              
-            // Changed multiple if statements into minimal amount of if statements needed
-
             if (removalOptions is DcfMappingOptions)
             {
                 options = (DcfMappingOptions)removalOptions;
             }
-            else if (removalOptions is DcfRemovalOptionsAuto || removalOptions is DcfRemovalOptionsBuffer || removalOptions is DcfRemovalOptionsManual)
+            else if (removalOptions is DcfRemovalOptionsAuto)
             {
-                var tempOpt = (DcfMappingOptions)removalOptions;
-                options = new DcfMappingOptions
-                {
-                    HelperType = tempOpt.HelperType,
-                    PIDcurrentConnectionProperties = tempOpt.PIDcurrentConnectionProperties,
-                    PIDcurrentConnections = tempOpt.PIDcurrentConnections,
-                    PIDcurrentInterfaceProperties = tempOpt.PIDcurrentInterfaceProperties
-                };
-
-                if (removalOptions is DcfRemovalOptionsBuffer)
-                {
-                    options.PIDnewConnectionProperties = ((DcfRemovalOptionsBuffer)removalOptions).PIDnewConnectionProperties;
-                    options.PIDnewConnections = ((DcfRemovalOptionsBuffer)removalOptions).PIDnewConnections;
-                    options.PIDnewInterfaceProperties = ((DcfRemovalOptionsBuffer)removalOptions).PIDnewInterfaceProperties;
-                }
+                var tempOpt = (DcfRemovalOptionsAuto)removalOptions;
+                options = new DcfMappingOptions();
+                options.HelperType = (SyncOption)tempOpt.HelperType;
+                options.PIDcurrentConnectionProperties = tempOpt.PIDcurrentConnectionProperties;
+                options.PIDcurrentConnections = tempOpt.PIDcurrentConnections;
+                options.PIDcurrentInterfaceProperties = tempOpt.PIDcurrentInterfaceProperties;
+            }
+            else if (removalOptions is Options.DcfRemovalOptionsBuffer)
+            {
+                var tempOpt = (Options.DcfRemovalOptionsBuffer)removalOptions;
+                options = new Options.DcfMappingOptions();
+                options.HelperType = (Options.SyncOption)tempOpt.HelperType;
+                options.PIDcurrentConnectionProperties = tempOpt.PIDcurrentConnectionProperties;
+                options.PIDcurrentConnections = tempOpt.PIDcurrentConnections;
+                options.PIDcurrentInterfaceProperties = tempOpt.PIDcurrentInterfaceProperties;
+                options.PIDnewConnectionProperties = tempOpt.PIDnewConnectionProperties;
+                options.PIDnewConnections = tempOpt.PIDnewConnections;
+                options.PIDnewInterfaceProperties = tempOpt.PIDnewInterfaceProperties;
+            }
+            else if (removalOptions is Options.DcfRemovalOptionsManual)
+            {
+                //Custom
+                var tempOpt = (Options.DcfRemovalOptionsManual)removalOptions;
+                options = new Options.DcfMappingOptions();
+                options.HelperType = (Options.SyncOption)tempOpt.HelperType;
+                options.PIDcurrentConnectionProperties = tempOpt.PIDcurrentConnectionProperties;
+                options.PIDcurrentConnections = tempOpt.PIDcurrentConnections;
+                options.PIDcurrentInterfaceProperties = tempOpt.PIDcurrentInterfaceProperties;
             }
             else
             {
-                // Default custom without mapping - shouldn't happen
-                options = new DcfMappingOptions();
+                //Default custom without mapping - shouldn't happen
+                options = new Options.DcfMappingOptions();
             }
-            
+
+
 
             this.protocol = protocol;
             helperType = options.HelperType;
@@ -992,7 +1002,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 
                     if (matchingConnection != null) sourceId = matchingConnection.ConnectionId;
                     if (newDestinationConnection != null) destinationId = newDestinationConnection.ConnectionId;
-
 
 
                     protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|4", LogType.Error, LogLevel.NoLogging);
