@@ -67,6 +67,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
         /// <param name="removalOptions">Options to configure how the object should deal with removed connections & properties.</param>
         /// <param name="debugLevel">Indicates how much debug logging should be performed.</param>
         //[DISCodeLibrary(Version = 1)]
+        //TODO: removalOptions check
         private DcfHelper(SLProtocol protocol, int startupCheckPID, DcfRemovalOptions removalOptions, DcfDebugLevel debugLevel = DcfDebugLevel.None)
         {
             this.debugLevel = debugLevel;
@@ -247,7 +248,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
         /// <param name="startupCheck">A PID holding a mapping of all elements that were already checked for startup.</param>
         /// <param name="options">Options holding the mapping pids needed to deal with the chosen removal strategy.</param>
         /// <param name="debugLevel">Options to configure how the object should deal with removed connections & properties</param>
-        public DcfHelper(SLProtocol protocol, int startupCheck, DcfRemovalOptionsAuto options, DcfDebugLevel debugLevel = DcfDebugLevel.None)
+        public DcfHelper(SLProtocol protocol, int startupCheck, DcfMappingOptions options, DcfDebugLevel debugLevel = DcfDebugLevel.None)
 : this(protocol, startupCheck, (DcfRemovalOptions)options, debugLevel)
         {
         }
@@ -907,7 +908,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                     }
 
                     elementConnections.AddIndex(indexer);
-                    // Find Original Connection
                     ConnectivityConnection matchingConnection = elementConnections.FindValue(indexer, uniqueKey).FirstOrDefault();
                     ConnectivityConnection newDestinationConnection = null;
                     int sourceId = -1;

@@ -174,5 +174,28 @@ catch (Exception e)
     protocol.Log(string.Format("QA{0}:|ERR: DCF Interface|(Exception) at CheckInterfacesReady with Exception:{1}", protocol.QActionID, e.ToString()), LogType.Error, LogLevel.NoLogging);
 }
 
+693-719
+
+if (request.DestinationInterface != null)
+{
+    indexer = p => InternalExternalChar(p, request.Type) + "_" +
+        (request.SourceInterface != null
+            ? $"{p.SourceInterfaceId}/{p.DestinationDMAId}/{p.DestinationEId}/{p.DestinationInterfaceId}"
+            : $"{p.DestinationDMAId}/{p.DestinationEId}/{p.DestinationInterfaceId}");
+    uniqueKey = internalExternal + "_" +
+        (request.SourceInterface != null
+            ? $"{request.SourceInterface.InterfaceId}/{request.DestinationInterface.ElementKey}/{request.DestinationInterface.InterfaceId}"
+            : $"{request.DestinationInterface.DataMinerId}/{request.DestinationInterface.ElementId}/{request.DestinationInterface.InterfaceId}");
+}
+else if (request.SourceInterface != null)
+{
+    indexer = p => InternalExternalChar(p, request.Type) + "_" + p.SourceInterfaceId;
+    uniqueKey = internalExternal + "_" + Convert.ToString(request.SourceInterface.InterfaceId);
+}
+else
+{
+    indexer = p => InternalExternalChar(p, request.Type);
+    uniqueKey = internalExternal;
+}
 
 
