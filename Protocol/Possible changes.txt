@@ -199,3 +199,317 @@ else
 }
 
 
+public bool RemoveConnectionProperties(ConnectivityConnection connection, bool force, params int[] propertyIDs)
+{
+    try
+    {
+        if (connection == null)
+        {
+            protocol.Log(string.Format("QA{0}:|ERR: DCF Connection Property| Remove Connection Properties ConnectivityConnection connection was Null", protocol.QActionID), LogType.Error, LogLevel.NoLogging);
+            return false;
+        }
+
+        if (currentConnectionPropertyPID == -1)
+        {
+            protocol.Log("QA" + protocol.QActionID + "|ERR: DCF Connection Property|DCFHelper Error: Using RemoveConnectionProperties requires the CurrentConnectionPropertiesPID to be defined! Please change the Options Objects to include this PID", LogType.Error, LogLevel.NoLogging);
+            return false;
+        }
+
+        bool success = true;
+        string eleKey = CreateElementKey(connection.SourceDataMinerId, connection.SourceElementId);
+
+        if (!IsElementStarted(protocol, eleKey))
+        {
+            protocol.Log(string.Format("QA{0}: |ERR: DCF Connection Property|Ignoring RemoveConnectionProperties: Unloaded Element:{1} ", protocol.QActionID, eleKey), LogType.Error, LogLevel.NoLogging);
+            return false;
+        }
+
+        HashSet<int> managedNewByThisProtocol = newConnectionProperties.TryGetValue(eleKey, out var newProps) ? newProps : new HashSet<int>();
+        HashSet<int> managedCurrentByThisProtocol = currentConnectionProperties.TryGetValue(eleKey, out var currentProps) ? currentProps : new HashSet<int>();
+
+        foreach (int propertyID in propertyIDs)
+        {
+            if (force || managedNewByThisProtocol.Contains(propertyID) || managedNewByThisProtocol.Contains(-propertyID) || managedCurrentByThisProtocol.Contains(propertyID) || managedCurrentByThisProtocol.Contains(-propertyID))
+            {
+                DebugLog("QA" + protocol.QActionID + "|DCF Connection Property (" + propertyID + ")|Deleting Connection Property:" + propertyID, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+                if (!connection.DeleteProperty(propertyID))
+                {
+                    success = false;
+                    protocol.Log(string.Format("QA{0}:|ERR: DCF Connection Property (" + propertyID + ")| Removing Connection Property:{1} Returned False! Property may not have been Removed!", protocol.QActionID, propertyID), LogType.Error, LogLevel.NoLogging);
+                }
+                else
+                {
+                    managedCurrentByThisProtocol.Remove(propertyID);
+                    managedNewByThisProtocol.Remove(propertyID);
+                    managedCurrentByThisProtocol.Remove(-propertyID);
+                    managedNewByThisProtocol.Remove(-propertyID);
+                }
+            }
+        }
+
+        newConnectionProperties[eleKey] = managedNewByThisProtocol;
+        currentConnectionProperties[eleKey] = managedCurrentByThisProtocol;
+        return success;
+    }
+    catch (Exception e)
+    {
+        protocol.Log(string.Format("QA{0}:|ERR: DCF Connection Property|(Exception) Value at {1} with Exception:{2}", protocol.QActionID, "RemoveConnectionProperties", e.ToString()), LogType.Error, LogLevel.NoLogging);
+    }
+
+    return false;
+}
+
+
+public DcfConnectionResult[] GetConnections(bool forceRefresh, params DcfConnectionFilter[] requests)
+{
+    DcfConnectionResult[] result = new DcfConnectionResult[requests.Length];
+
+    for (int i = 0; i < requests.Length; i++)
+    {
+        var request = requests[i];
+        result[i] = null;
+
+        // ... (omitting the logging for brevity)
+
+        // Calculate requestDMAId, requestEleId, and requestElementKey
+
+        int requestDMAId;
+        int requestEleId;
+        string requestElementKey;
+
+        if (string.IsNullOrEmpty(request.ElementKey))
+        {
+            requestDMAId = request.SourceInterface?.DataMinerId ?? localDMAID;
+            requestEleId = request.SourceInterface?.ElementId ?? localEleID;
+            requestElementKey = request.SourceInterface?.ElementKey ?? localElementKey;
+        }
+        else if (request.ElementKey == "local")
+        {
+            requestElementKey = localElementKey;
+            requestDMAId = localDMAID;
+            requestEleId = localEleID;
+        }
+        else
+        {
+            string[] splitKey = request.ElementKey.Split('/');
+            if (splitKey.Length > 1 && int.TryParse(splitKey[0], out requestDMAId) && int.TryParse(splitKey[1], out requestEleId))
+            {
+                requestElementKey = request.ElementKey;
+            }
+            else
+            {
+                protocol.Log($"QA{protocol.QActionID}: |ERR: DCF Connection|Ignoring GetConnections: Invalid Format ElementKey:{request.ElementKey}", LogType.Error, LogLevel.NoLogging);
+                continue;
+            }
+        }
+
+
+        // ...
+
+        string internalExternal = GetInternalExternalString(request.Type);
+
+        // ...
+
+        if (!IsElementStarted(protocol, requestElementKey))
+        {
+            continue;
+        }
+
+        // ...
+
+        if (!cachedConnectionPerElement.ContainsKey(requestElementKey) || forceRefresh)
+        {
+            var newPolledConnections = protocol.GetConnectivityConnections(requestDMAId, requestEleId);
+            if (newPolledConnections == null)
+            {
+                // Handle the case where GetConnectivityConnections returns null
+                continue;
+            }
+
+            cachedConnectionPerElement[requestElementKey] = new FastCollection<ConnectivityConnection>(newPolledConnections.Values.ToList());
+        }
+
+        // ...
+
+        FastCollection<ConnectivityConnection> elementConnections = cachedConnectionPerElement[requestElementKey];
+        var foundConnections = FindConnections(elementConnections, indexer, uniqueKey);
+
+        // ...
+
+        if (request.PropertyFilter != null && result[i] != null)
+        {
+            // ToDo: Write code to filter on connectionProperties
+        }
+    }
+
+    // Log the result or any other necessary logging
+    return result;
+}
+
+private string GetInternalExternalString(ConnectionType type)
+{
+    switch (type)
+    {
+        case ConnectionType.Internal:
+            return "I";
+        case ConnectionType.External:
+            return "E";
+        case ConnectionType.Both:
+            return "B";
+        default:
+            return "B"; // Default to "Both" if the type is not recognized.
+    }
+}
+
+private ConnectivityConnection[] FindConnections(FastCollection<ConnectivityConnection> elementConnections, Expression<Func<ConnectivityConnection, object>> indexer, string uniqueKey)
+{
+    if (indexer != null && uniqueKey != null)
+    {
+        var foundConnections = elementConnections.FindValue(indexer, uniqueKey).ToArray();
+        return foundConnections.Length > 0 ? foundConnections : null;
+    }
+    else
+    {
+        return elementConnections.Count() > 0 ? elementConnections.ToArray() : null;
+    }
+}
+
+
+public bool RemoveConnections(int dataMinerID, int elementID, bool bothConnections, bool force, params int[] connectionIDs)
+{
+    try
+    {
+        if (currentConnectionsPID == -1)
+        {
+            protocol.Log("QA" + protocol.QActionID + "|ERR: DCF Connection|DCFHelper Error: Using RemoveConnections requires the CurrentConnectionsPID to be defined! Please change the Options Objects to include this PID", LogType.Error, LogLevel.NoLogging);
+            return false;
+        }
+
+        string eleKey = CreateElementKey(dataMinerID, elementID);
+
+        // Early return for unloaded elements
+        if (unloadedElements.Contains(eleKey))
+        {
+            protocol.Log(string.Format("QA{0}: |ERR: DCF Connection|Ignoring RemoveConnections: Unloaded Element:{1} ", protocol.QActionID, eleKey), LogType.Error, LogLevel.NoLogging);
+            return false;
+        }
+
+        HashSet<int> managedNewByThisProtocol = new HashSet<int>(newConnections.TryGetValue(eleKey, out var newSet) ? newSet : Enumerable.Empty<int>());
+        HashSet<int> managedCurrentByThisProtocol = new HashSet<int>(currentConnections.TryGetValue(eleKey, out var currentSet) ? currentSet : Enumerable.Empty<int>());
+
+        // Optimized
+        foreach (int connectionID in connectionIDs)
+        {
+            int absConnectionID = Math.Abs(connectionID);
+
+            if (force || managedCurrentByThisProtocol.Contains(absConnectionID) || managedNewByThisProtocol.Contains(absConnectionID))
+            {
+                string logMessage = $"QA{protocol.QActionID}|DCF Connection ({absConnectionID}) | Deleting Connection:{absConnectionID}";
+
+                DebugLog(logMessage, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+                if (protocol.DeleteConnectivityConnection(absConnectionID, dataMinerID, elementID, bothConnections))
+                {
+                    managedNewByThisProtocol.Remove(absConnectionID);
+                    managedCurrentByThisProtocol.Remove(absConnectionID);
+                }
+                else
+                {
+                    string errorMessage = $"QA{protocol.QActionID}: |ERR: DCF Connection ({absConnectionID})| Removing DCF Connection: {absConnectionID} Returned False. Connection may not have been removed";
+
+                    protocol.Log(errorMessage, LogType.Error, LogLevel.NoLogging);
+                    finalResult = false;
+                }
+            }
+        }
+
+        newConnections[eleKey] = managedNewByThisProtocol;
+        currentConnections[eleKey] = managedCurrentByThisProtocol;
+
+        return finalResult;
+    }
+    catch (Exception e)
+    {
+        protocol.Log(string.Format("QA{0}:|ERR: DCF Connection| (Exception) Value at {1} with Exception:{2}", protocol.QActionID, "RemoveConnections", e.ToString()), LogType.Error, LogLevel.NoLogging);
+    }
+
+    return false;
+}
+
+
+
+
+public bool RemoveConnections(int dataMinerID, int elementID, bool bothConnections, bool force, params int[] connectionIDs)
+{
+    try
+    {
+        if (currentConnectionsPID == -1)
+        {
+            protocol.Log("QA" + protocol.QActionID + "|ERR: DCF Connection|DCFHelper Error: Using RemoveConnections requires the CurrentConnectionsPID to be defined! Please change the Options Objects to include this PID", LogType.Error, LogLevel.NoLogging);
+            return false;
+        }
+
+        string eleKey = CreateElementKey(dataMinerID, elementID);
+
+        // Early return for unloaded elements
+        if (unloadedElements.Contains(eleKey))
+        {
+            protocol.Log(string.Format("QA{0}: |ERR: DCF Connection|Ignoring RemoveConnections: Unloaded Element:{1} ", protocol.QActionID, eleKey), LogType.Error, LogLevel.NoLogging);
+            return false;
+        }
+
+        // Retrieve the managed connections sets
+        if (!newConnections.TryGetValue(eleKey, out var managedNewByThisProtocol))
+        {
+            managedNewByThisProtocol = new HashSet<int>();
+        }
+
+        if (!currentConnections.TryGetValue(eleKey, out var managedCurrentByThisProtocol))
+        {
+            managedCurrentByThisProtocol = new HashSet<int>();
+        }
+
+        bool finalResult = true;
+
+        // Create a HashSet for faster lookup
+        var connectionIDsSet = new HashSet<int>(connectionIDs.Select(Math.Abs));
+
+        foreach (int connectionID in connectionIDsSet)
+        {
+            if (force || managedCurrentByThisProtocol.Contains(connectionID) || managedNewByThisProtocol.Contains(connectionID))
+            {
+                string logMessage = $"QA{protocol.QActionID}|DCF Connection ({connectionID}) | Deleting Connection:{connectionID}";
+
+                DebugLog(logMessage, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+                if (protocol.DeleteConnectivityConnection(connectionID, dataMinerID, elementID, bothConnections))
+                {
+                    managedNewByThisProtocol.Remove(connectionID);
+                    managedCurrentByThisProtocol.Remove(connectionID);
+                }
+                else
+                {
+                    string errorMessage = $"QA{protocol.QActionID}: |ERR: DCF Connection ({connectionID})| Removing DCF Connection: {connectionID} Returned False. Connection may not have been removed";
+
+                    protocol.Log(errorMessage, LogType.Error, LogLevel.NoLogging);
+                    finalResult = false;
+                }
+            }
+        }
+
+        newConnections[eleKey] = managedNewByThisProtocol;
+        currentConnections[eleKey] = managedCurrentByThisProtocol;
+
+        return finalResult;
+    }
+    catch (Exception e)
+    {
+        protocol.Log(string.Format("QA{0}:|ERR: DCF Connection| (Exception) Value at {1} with Exception:{2}", protocol.QActionID, "RemoveConnections", e.ToString()), LogType.Error, LogLevel.NoLogging);
+    }
+
+    return false;
+}
+
+
+

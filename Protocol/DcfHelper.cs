@@ -689,34 +689,36 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                     indexer = p => InternalExternalChar(p, request.Type) + "_" + Convert.ToString(p.ConnectionName);
                     uniqueKey = internalExternal + "_" + Convert.ToString(request.ConnectionName);
                 }
-
+               
                 if (request.DestinationInterface != null)
-                {
-                    if (request.SourceInterface != null)
-                    {
-                        // Source + Destination
-                        indexer = p => InternalExternalChar(p, request.Type) + "_" + p.SourceInterfaceId + "/" + p.DestinationDMAId + "/" + p.DestinationEId + "/" + p.DestinationInterfaceId;
-                        uniqueKey = internalExternal + "_" + request.SourceInterface.InterfaceId + "/" + request.DestinationInterface.ElementKey + "/" + request.DestinationInterface.InterfaceId;
-                    }
-                    else
-                    {
-                        // only Destination
-                        indexer = p => InternalExternalChar(p, request.Type) + "_" + p.DestinationDMAId + "/" + p.DestinationEId + "/" + p.DestinationInterfaceId;
-                        uniqueKey = internalExternal + "_" + request.DestinationInterface.DataMinerId + "/" + request.DestinationInterface.ElementId + "/" + request.DestinationInterface.InterfaceId;
-                    }
-                }
-                else if (request.SourceInterface != null)
-                {
-                    // only Source
-                    indexer = p => InternalExternalChar(p, request.Type) + "_" + p.SourceInterfaceId;
-                    uniqueKey = internalExternal + "_" + Convert.ToString(request.SourceInterface.InterfaceId);
-                }
-                else
-                {
-                    //Default to getting all the connections from the element (external, internal or both) if no filter is provided.
-                    indexer = p => InternalExternalChar(p, request.Type);
-                    uniqueKey = internalExternal;
-                }
+				{
+					if (request.SourceInterface != null)
+					{
+						// Source + Destination
+						indexer = p => InternalExternalChar(p, request.Type) + "_" + p.SourceInterfaceId + "/" + p.DestinationDMAId + "/" + p.DestinationEId + "/" + p.DestinationInterfaceId;
+						uniqueKey = internalExternal + "_" + request.SourceInterface.InterfaceId + "/" + request.DestinationInterface.ElementKey + "/" + request.DestinationInterface.InterfaceId;
+					}
+					else
+					{
+						// only Destination
+						indexer = p => InternalExternalChar(p, request.Type) + "_" + p.DestinationDMAId + "/" + p.DestinationEId + "/" + p.DestinationInterfaceId;
+						uniqueKey = internalExternal + "_" + request.DestinationInterface.DataMinerId + "/" + request.DestinationInterface.ElementId + "/" + request.DestinationInterface.InterfaceId;
+					}
+				}
+				else if (request.SourceInterface != null)
+				{
+					// only Source
+					indexer = p => InternalExternalChar(p, request.Type) + "_" + p.SourceInterfaceId;
+					uniqueKey = internalExternal + "_" + Convert.ToString(request.SourceInterface.InterfaceId);
+				}
+				else
+				{
+					//Default to getting all the connections from the element (external, internal or both) if no filter is provided.
+					indexer = p => InternalExternalChar(p, request.Type);
+					uniqueKey = internalExternal;
+				}
+
+           
 
                 protocol.Log("QA" + protocol.QActionID + "|TEMP|1.4", LogType.Error, LogLevel.NoLogging);
                 if (!cachedConnectionPerElement.ContainsKey(requestElementKey) || forceRefresh)
@@ -768,6 +770,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
             protocol.Log("QA" + protocol.QActionID + "|TEMP|1.result", LogType.Error, LogLevel.NoLogging);
             return result;
         }
+
 
         /// <summary>
         /// GetConnections allows the retrieval of connections based on DCFConnectionFilters using an internal cache.
@@ -910,100 +913,107 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                     elementConnections.AddIndex(indexer);
                     ConnectivityConnection matchingConnection = elementConnections.FindValue(indexer, uniqueKey).FirstOrDefault();
                     ConnectivityConnection newDestinationConnection = null;
+
                     int sourceId = -1;
                     int destinationId = -1;
-                    bool connectionUpdated = true;
-
-                    string connectionType = internalConnection ? "Internal" : "External";
-                    string sourceKey = currentRequest.Source.ElementKey;
-                    string destinationKey = currentRequest.Destination.ElementKey;
-
-                    string logMessage = $"QA{protocol.QActionID}|DCF Connection|Adding {connectionType} Connection:{currentRequest.CustomName} | With Connection Filter: {currentRequest.ConnectionFilter}";
-
-                    if (!internalConnection)
-                    {
-                        logMessage += $" | from Element:{sourceKey} To Element:{destinationKey}";
-                    }
-
-                    DebugLog(logMessage, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
-
-                    bool operationResult = false;
-
                     if (matchingConnection == null)
                     {
                         // Add a new Connection
-                        if (!currentRequest.Async)
+                        if (internalConnection)
                         {
-                            operationResult = internalConnection
-                                ? currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName, currentRequest.Destination, currentRequest.ConnectionFilter, false, out matchingConnection, out newDestinationConnection, 420000)
-                                : currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName + " -RETURN", currentRequest.Destination, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out matchingConnection, out newDestinationConnection, 420000);
+                            DebugLog("QA" + protocol.QActionID + "|DCF Connection|Adding Internal Connection:" + currentRequest.CustomName + " | With Connection Filter: " + currentRequest.ConnectionFilter + " | on Element:" + currentRequest.Source.ElementKey, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+                            // add an internal connection
+                            if (!currentRequest.Async)
+                            {
+                                if (!currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName, currentRequest.Destination, currentRequest.ConnectionFilter, false, out matchingConnection, out newDestinationConnection, 420000))
+                                {
+                                    protocol.Log(string.Format("QA{0}: |ERR: DCF Connection|Adding Internal DCF Connection -sync:{1} on element {2} Timed-Out after 7 minutes or returned false. Connection may not have been added", protocol.QActionID, currentRequest.CustomName, sourceElementKey), LogType.Error, LogLevel.NoLogging);
+                                }
+
+                                if (matchingConnection != null) sourceId = matchingConnection.ConnectionId;
+                                if (newDestinationConnection != null) destinationId = newDestinationConnection.ConnectionId;
+                            }
+                            else
+                            {
+                                if (!currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName, currentRequest.Destination, currentRequest.ConnectionFilter, false, out sourceId, out destinationId))
+                                {
+                                    protocol.Log(string.Format("QA{0}: |ERR: DCF Connection|Adding Internal DCF Connection -async:{1} on element {2} returned false. Connection may not have been added", protocol.QActionID, currentRequest.CustomName, sourceElementKey), LogType.Error, LogLevel.NoLogging);
+                                }
+                            }
                         }
                         else
                         {
-                            operationResult = internalConnection
-                                ? currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName, currentRequest.Destination, currentRequest.ConnectionFilter, false, out sourceId, out destinationId)
-                                : currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName + " -RETURN", currentRequest.Destination, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out sourceId, out destinationId);
-                        }
+                            DebugLog("QA" + protocol.QActionID + "|DCF Connection|Adding External Connection:" + currentRequest.CustomName + " | With Connection Filter: " + currentRequest.ConnectionFilter + " | from Element:" + currentRequest.Source.ElementKey + " To Element:" + currentRequest.Destination.ElementKey, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
 
-                        if (!operationResult)
-                        {
-                            string logErrorType = internalConnection ? "-sync" : "-async";
-                            string logErrorMessage = internalConnection
-                                ? $"QA{protocol.QActionID}: |ERR: DCF Connection|Adding {connectionType} DCF Connection{logErrorType}:{currentRequest.CustomName} on element {sourceKey} Timed-Out after 7 minutes or returned false. Connection may not have been added"
-                                : $"QA{protocol.QActionID}:|ERR: DCF Connection|Adding External DCF Connection:{currentRequest.CustomName} from element {sourceKey} to element {destinationKey} Timed-Out after 7 minutes or returned false. Connection may not have been added";
-
-                            protocol.Log(logErrorMessage, LogType.Error, LogLevel.NoLogging);
+                            // add an external connection
+                            if (!currentRequest.Async)
+                            {
+                                if (!currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName + " -RETURN", currentRequest.Destination, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out matchingConnection, out newDestinationConnection, 420000))
+                                {
+                                    protocol.Log(string.Format("QA{0}:|ERR: DCF Connection|Adding External DCF Connection:{1} from element {2} to element {3} Timed-Out after 7 minutes or returned false. Connection may not have been added", protocol.QActionID, currentRequest.CustomName, sourceElementKey, currentRequest.Destination), LogType.Error, LogLevel.NoLogging);
+                                }
+                                if (matchingConnection != null) sourceId = matchingConnection.ConnectionId;
+                                if (newDestinationConnection != null) destinationId = newDestinationConnection.ConnectionId;
+                            }
+                            else
+                            {
+                                if (!currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName + " -RETURN", currentRequest.Destination, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out sourceId, out destinationId))
+                                {
+                                    protocol.Log(string.Format("QA{0}: |ERR: DCF Connection|Adding Internal DCF Connection -async:{1} on element {2} returned false. Connection may not have been added", protocol.QActionID, currentRequest.CustomName, sourceElementKey), LogType.Error, LogLevel.NoLogging);
+                                }
+                            }
                         }
                     }
                     else
                     {
                         // Update the Connection
-                        bool updateRequired = matchingConnection.ConnectionName != currentRequest.CustomName ||
-                            matchingConnection.SourceDataMinerId + "/" + matchingConnection.SourceElementId != sourceKey ||
-                            matchingConnection.SourceInterfaceId != currentRequest.Source.InterfaceId ||
-                            matchingConnection.DestinationDMAId + "/" + matchingConnection.DestinationEId != destinationKey ||
-                            matchingConnection.DestinationInterfaceId != currentRequest.Destination.InterfaceId ||
-                            matchingConnection.ConnectionFilter != currentRequest.ConnectionFilter;
-
-                        if (!updateRequired)
+                        // Check if Update is Necessary
+                        if (
+                            matchingConnection.ConnectionName == currentRequest.CustomName
+                            && matchingConnection.SourceDataMinerId + "/" + matchingConnection.SourceElementId == currentRequest.Source.ElementKey
+                            && matchingConnection.SourceInterfaceId == currentRequest.Source.InterfaceId
+                            && matchingConnection.DestinationDMAId + "/" + matchingConnection.DestinationEId == currentRequest.Destination.ElementKey
+                            && matchingConnection.DestinationInterfaceId == currentRequest.Destination.InterfaceId
+                            && matchingConnection.ConnectionFilter == currentRequest.ConnectionFilter)
                         {
-                            connectionUpdated = false;
-                            string logMessageType = internalConnection ? "Internal" : "External";
-                            string logMessageSame = internalConnection
-                                ? $"QA{protocol.QActionID}|DCF Connection ({matchingConnection.ConnectionId}) | Not Updating {logMessageType} Connection (ID:{matchingConnection.ConnectionId}) To:{currentRequest.CustomName} on Element:{sourceKey} -- No Change Detected"
-                                : $"QA{protocol.QActionID}|DCF Connection ({matchingConnection.ConnectionId}) | Not Updating {logMessageType} Connection (ID:{matchingConnection.ConnectionId}) To:{currentRequest.CustomName} from Element:{sourceKey} To Element:{destinationKey} -- No Change Detected";
+                            // NO UPDATE NECESSARY
+                            updated = false;
 
-                            DebugLog(logMessageSame, LogType.Allways, LogLevel.NoLogging, DcfLogType.Same);
+                            if (internalConnection)
+                            {
+                                DebugLog("QA" + protocol.QActionID + "|DCF Connection (" + matchingConnection.ConnectionId + ") |Not Updating Internal Connection (ID:" + matchingConnection.ConnectionId + ") To:" + currentRequest.CustomName + " on Element:" + currentRequest.Source.ElementKey + "-- No Change Detected", LogType.Allways, LogLevel.NoLogging, DcfLogType.Same);
+                            }
+                            else
+                            {
+                                DebugLog("QA" + protocol.QActionID + "|DCF Connection (" + matchingConnection.ConnectionId + ") |Not Updating External Connection (ID:" + matchingConnection.ConnectionId + ") To:" + currentRequest.CustomName + " from Element:" + currentRequest.Source.ElementKey + " To Element:" + currentRequest.Destination.ElementKey + "-- No Change Detected", LogType.Allways, LogLevel.NoLogging, DcfLogType.Same);
+                            }
                         }
                         else
                         {
-                            string logMessageType = internalConnection ? "Internal" : "External";
-                            string logMessageChange = internalConnection
-                                ? $"QA{protocol.QActionID}|DCF Connection ({matchingConnection.ConnectionId}) | Updating {logMessageType} Connection (ID:{matchingConnection.ConnectionId}) To:{currentRequest.CustomName} | With Connection Filter: {currentRequest.ConnectionFilter} | on Element:{sourceKey}"
-                                : $"QA{protocol.QActionID}|DCF Connection ({matchingConnection.ConnectionId}) | Updating {logMessageType} Connection (ID:{matchingConnection.ConnectionId}) To:{currentRequest.CustomName} | With Connection Filter: {currentRequest.ConnectionFilter} | from Element:{sourceKey} To Element:{destinationKey}";
-
-                            DebugLog(logMessageChange, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
-
-                            operationResult = internalConnection
-                                ? matchingConnection.Update(currentRequest.CustomName, currentRequest.Source.InterfaceId, currentRequest.CustomName, currentRequest.Destination.DataMinerId, currentRequest.Destination.ElementId, currentRequest.Destination.InterfaceId, currentRequest.ConnectionFilter, false, out newDestinationConnection, 420000)
-                                : matchingConnection.Update(currentRequest.CustomName, currentRequest.Source.InterfaceId, currentRequest.CustomName + " -RETURN", currentRequest.Destination.DataMinerId, currentRequest.Destination.ElementId, currentRequest.Destination.InterfaceId, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out newDestinationConnection, 420000);
-
-                            if (!operationResult)
+                            // UPDATE NECESSARY
+                            if (internalConnection)
                             {
-                                string logErrorType = internalConnection ? "Internal" : "External";
-                                string logErrorMessage = internalConnection
-                                    ? $"QA{protocol.QActionID}|ERR: DCF Connection ({matchingConnection.ConnectionId}) | Updating {logErrorType} DCF Connection:{currentRequest.CustomName} on element {sourceKey} Timed-Out after 7 minutes or returned false. Connection may not have been updated"
-                                    : $"QA{protocol.QActionID}|ERR: DCF Connection ({matchingConnection.ConnectionId}) | Updating {logErrorType} DCF Connection:{currentRequest.CustomName} from element {sourceKey} to element {destinationKey} Timed-Out after 7 minutes or returned false. Connection may not have been updated";
-
-                                protocol.Log(logErrorMessage, LogType.Error, LogLevel.NoLogging);
+                                DebugLog("QA" + protocol.QActionID + "|DCF Connection (" + matchingConnection.ConnectionId + ") |Updating Internal Connection (ID:" + matchingConnection.ConnectionId + ") To:" + currentRequest.CustomName + " | With Connection Filter: " + currentRequest.ConnectionFilter + " | on Element:" + currentRequest.Source.ElementKey, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+                                if (!matchingConnection.Update(currentRequest.CustomName, currentRequest.Source.InterfaceId, currentRequest.CustomName, currentRequest.Destination.DataMinerId, currentRequest.Destination.ElementId, currentRequest.Destination.InterfaceId, currentRequest.ConnectionFilter, false, out newDestinationConnection, 420000))
+                                {
+                                    protocol.Log(string.Format("QA{0}:|ERR: DCF Connection (" + matchingConnection.ConnectionId + ") | Updating Internal DCF Connection:{1} on element {2} Timed-Out after 7 minutes or returned false. Connection may not have been updated", protocol.QActionID, currentRequest.CustomName, sourceElementKey), LogType.Error, LogLevel.NoLogging);
+                                }
+                            }
+                            else
+                            {
+                                DebugLog("QA" + protocol.QActionID + "|DCF Connection (" + matchingConnection.ConnectionId + ") |Updating External Connection (ID:" + matchingConnection.ConnectionId + ") To:" + currentRequest.CustomName + " | With Connection Filter: " + currentRequest.ConnectionFilter + " | from Element:" + currentRequest.Source.ElementKey + " To Element:" + currentRequest.Destination.ElementKey, LogType.Allways, LogLevel.NoLogging, DcfLogType.Same);
+                                if (!matchingConnection.Update(currentRequest.CustomName, currentRequest.Source.InterfaceId, currentRequest.CustomName + " -RETURN", currentRequest.Destination.DataMinerId, currentRequest.Destination.ElementId, currentRequest.Destination.InterfaceId, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out newDestinationConnection, 420000))
+                                {
+                                    protocol.Log(string.Format("QA{0}:|ERR: DCF Connection (" + matchingConnection.ConnectionId + ") | Updating External DCF Connection:{1} from element {2} to element {3} Timed-Out after 7 minutes or returned false. Connection may not have been updated", protocol.QActionID, currentRequest.CustomName, sourceElementKey, currentRequest.Destination.ElementKey), LogType.Error, LogLevel.NoLogging);
+                                }
                             }
                         }
+                        if (matchingConnection != null) sourceId = matchingConnection.ConnectionId;
+                        if (newDestinationConnection != null) destinationId = newDestinationConnection.ConnectionId;
                     }
 
-                    if (matchingConnection != null) sourceId = matchingConnection.ConnectionId;
-                    if (newDestinationConnection != null) destinationId = newDestinationConnection.ConnectionId;
-
-
+                    
                     protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|4", LogType.Error, LogLevel.NoLogging);
                     string inpEleKye = CreateElementKey(currentRequest.Source.DataMinerId, currentRequest.Source.ElementId);
                     if (currentRequest.FixedConnection)
@@ -1172,40 +1182,8 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                     managedCurrentByThisProtocol = new HashSet<int>();
                 }
 
-                //Optimized ver
-                HashSet<int> uniqueConnectionIDs = new HashSet<int>(connectionIDs);
-
-                foreach(int connectionID in uniqueConnectionIDs)
-                {
-                    var con = input.GetConnectionById(connectionID);
-
-                    if(!force &&
-                       !managedCurrentByThisProtocol.Contains(connectionID) &&
-                       !managedCurrentByThisProtocol.Contains(-connectionID) &&
-                       !managedNewByThisProtocol.Contains(connectionID) &&
-                       !managedNewByThisProtocol.Contains(-connectionID))
-                    {
-                        continue;
-                    }
-
-                    DebugLog($"QA{protocol.QActionID}|DCF Connection ({con.ConnectionId})|Deleting Connection:{con.ConnectionName}", LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
-
-                    if(input.DeleteConnection(connectionID, bothConnections))
-                    {
-                        managedNewByThisProtocol.Remove(connectionID);
-                        managedCurrentByThisProtocol.Remove(connectionID);
-                        managedNewByThisProtocol.Remove(-connectionID);
-                        managedCurrentByThisProtocol.Remove(-connectionID);
-                    }
-
-                    else
-                    {
-                        protocol.Log($"QA{protocol.QActionID}:|ERR: DCF Connection ({connectionID})|Removing DCF Connection:{con.ConnectionName} Returned False. Connection may not have been Removed", LogType.Error, LogLevel.NoLogging);
-                        finalResult = false;
-                    }
-                }
-
-                /*for (int u = 0; u < connectionIDs.Length; u++)
+                
+                for (int u = 0; u < connectionIDs.Length; u++)
                 {
                     var con = input.GetConnectionById(connectionIDs[u]);
                     if (force || managedCurrentByThisProtocol.Contains(connectionIDs[u]) || managedCurrentByThisProtocol.Contains(-1 * connectionIDs[u]) || managedNewByThisProtocol.Contains(connectionIDs[u]) || managedNewByThisProtocol.Contains(-1 * connectionIDs[u]))
@@ -1225,7 +1203,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                             finalResult = false;
                         }
                     }
-                }*/
+                }
 
                 newConnections[eleKey] = managedNewByThisProtocol;
                 currentConnections[eleKey] = managedCurrentByThisProtocol;
@@ -1251,7 +1229,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
         /// <param name="connectionIDs">One or more connection IDs to remove</param>
         /// <returns>Boolean indicating the success of the removal</returns>
         //[DISCodeLibrary(Version = 1)]
-        public bool RemoveConnections(int dataMinerID, int elementID, bool bothConnections, bool force, params int[] connectionIDs)
+        /*public bool RemoveConnections(int dataMinerID, int elementID, bool bothConnections, bool force, params int[] connectionIDs)
         {
             try
             {
@@ -1308,9 +1286,10 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                         }
                     }
                 }
+                
+        //comment later
 
-
-                /*for (int u = 0; u < connectionIDs.Length; u++)
+                for (int u = 0; u < connectionIDs.Length; u++)
                 {
                     if (force || managedCurrentByThisProtocol.Contains(connectionIDs[u]) || managedCurrentByThisProtocol.Contains(-1 * connectionIDs[u]) || managedNewByThisProtocol.Contains(connectionIDs[u]) || managedNewByThisProtocol.Contains(-1 * connectionIDs[u]))
                     {
@@ -1327,7 +1306,69 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                             finalResult = false;
                         }
                     }
-                }*/
+                }
+        //end comment later
+                newConnections[eleKey] = managedNewByThisProtocol;
+                currentConnections[eleKey] = managedCurrentByThisProtocol;
+
+                return finalResult;
+            }
+            catch (Exception e)
+            {
+                protocol.Log(string.Format("QA{0}:|ERR: DCF Connection| (Exception) Value at {1} with Exception:{2}", protocol.QActionID, "RemoveConnections", e.ToString()), LogType.Error, LogLevel.NoLogging);
+            }
+
+            return false;
+        }*/
+
+        public bool RemoveConnections(int dataMinerID, int elementID, bool bothConnections, bool force, params int[] connectionIDs)
+        {
+            try
+            {
+                if (currentConnectionsPID == -1)
+                {
+                    protocol.Log("QA" + protocol.QActionID + "|ERR: DCF Connection|DCFHelper Error: Using RemoveConnections requires the CurrentConnectionsPID to be defined! Please change the Options Objects to include this PID", LogType.Error, LogLevel.NoLogging);
+                    return false;
+                }
+
+                bool finalResult = true;
+                string eleKey = CreateElementKey(dataMinerID, elementID);
+
+                // Early return for unloaded elements
+                if (unloadedElements.Contains(eleKey))
+                {
+                    protocol.Log(string.Format("QA{0}: |ERR: DCF Connection|Ignoring RemoveConnections: Unloaded Element:{1} ", protocol.QActionID, eleKey), LogType.Error, LogLevel.NoLogging);
+                    return false;
+                }
+
+                HashSet<int> managedNewByThisProtocol = new HashSet<int>(newConnections.TryGetValue(eleKey, out var newSet) ? newSet : Enumerable.Empty<int>());
+                HashSet<int> managedCurrentByThisProtocol = new HashSet<int>(currentConnections.TryGetValue(eleKey, out var currentSet) ? currentSet : Enumerable.Empty<int>());
+
+                // Optimized
+                foreach (int connectionID in connectionIDs)
+                {
+                    int absConnectionID = Math.Abs(connectionID);
+
+                    if (force || managedCurrentByThisProtocol.Contains(absConnectionID) || managedNewByThisProtocol.Contains(absConnectionID))
+                    {
+                        string logMessage = $"QA{protocol.QActionID}|DCF Connection ({absConnectionID}) | Deleting Connection:{absConnectionID}";
+
+                        DebugLog(logMessage, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+                        if (protocol.DeleteConnectivityConnection(absConnectionID, dataMinerID, elementID, bothConnections))
+                        {
+                            managedNewByThisProtocol.Remove(absConnectionID);
+                            managedCurrentByThisProtocol.Remove(absConnectionID);
+                        }
+                        else
+                        {
+                            string errorMessage = $"QA{protocol.QActionID}: |ERR: DCF Connection ({absConnectionID})| Removing DCF Connection: {absConnectionID} Returned False. Connection may not have been removed";
+
+                            protocol.Log(errorMessage, LogType.Error, LogLevel.NoLogging);
+                            finalResult = false;
+                        }
+                    }
+                }
 
                 newConnections[eleKey] = managedNewByThisProtocol;
                 currentConnections[eleKey] = managedCurrentByThisProtocol;
@@ -1341,6 +1382,8 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 
             return false;
         }
+
+
 
         /// <summary>
         /// Saves a collection of ConnectivityConnectionProperty objects to a given ConnectivityConnection.
@@ -1399,7 +1442,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                 connectionProperties.Add(itfProps.Values.ToList(), propertyIdentifier);
             }
 
-            //No optimization needed
 
             List<ConnectivityConnectionProperty> allNewAdded = new List<ConnectivityConnectionProperty>();
             for (int i = 0; i < requests.Length; i++)
