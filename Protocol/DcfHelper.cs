@@ -914,6 +914,9 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                     ConnectivityConnection matchingConnection = elementConnections.FindValue(indexer, uniqueKey).FirstOrDefault();
                     ConnectivityConnection newDestinationConnection = null;
 
+
+                    //this
+                    
                     int sourceId = -1;
                     int destinationId = -1;
                     if (matchingConnection == null)
@@ -965,6 +968,9 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                             }
                         }
                     }
+
+                    
+                    
                     else
                     {
                         // Update the Connection
@@ -1013,7 +1019,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                         if (newDestinationConnection != null) destinationId = newDestinationConnection.ConnectionId;
                     }
 
-                    
+
                     protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|4", LogType.Error, LogLevel.NoLogging);
                     string inpEleKye = CreateElementKey(currentRequest.Source.DataMinerId, currentRequest.Source.ElementId);
                     if (currentRequest.FixedConnection)
@@ -1031,22 +1037,49 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                     }
                     protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6.1", LogType.Error, LogLevel.NoLogging);
                     DcfSaveConnectionPropertyResult[] propertyResults = null;
-                    if (currentRequest.PropertyRequests != null && currentRequest.PropertyRequests.Count() > 0)
+
+                    //changed 
+                    if (currentRequest.PropertyRequests != null && currentRequest.PropertyRequests.Any())
                     {
-                        protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6.2", LogType.Error, LogLevel.NoLogging);
+                        var logPrefix = "QA" + protocol.QActionID;
+                        protocol.Log(logPrefix + "|TEMPORARY|6.2", LogType.Error, LogLevel.NoLogging);
+
                         if (!currentRequest.Async)
                         {
-                            protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|7", LogType.Error, LogLevel.NoLogging);
+                            protocol.Log(logPrefix + "|TEMPORARY|7", LogType.Error, LogLevel.NoLogging);
                             propertyResults = SaveConnectionProperties(matchingConnection, currentRequest.PropertyRequests.ToArray());
                         }
                         else
                         {
-                            protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6.2.1", LogType.Error, LogLevel.NoLogging);
-                            if (matchingConnection == null) protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|MatchCon null", LogType.Error, LogLevel.NoLogging);
-                            protocol.Log(string.Format("QA{0}:|ERR: DCF Connection (" + sourceId + ") | Saving Properties on an Async created connection is not supported. Please use synchronous SaveConnections", protocol.QActionID), LogType.Error, LogLevel.NoLogging);
-                            protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6.2.1.1", LogType.Error, LogLevel.NoLogging);
+                            protocol.Log(logPrefix + "|TEMPORARY|6.2.1", LogType.Error, LogLevel.NoLogging);
+
+                            if (matchingConnection == null)
+                            {
+                                protocol.Log(logPrefix + "|TEMPORARY|MatchCon null", LogType.Error, LogLevel.NoLogging);
+                            }
+
+                            protocol.Log($"QA{protocol.QActionID}:|ERR: DCF Connection ({sourceId}) | Saving Properties on an Async created connection is not supported. Please use synchronous SaveConnections", LogType.Error, LogLevel.NoLogging);
+                            protocol.Log(logPrefix + "|TEMPORARY|6.2.1.1", LogType.Error, LogLevel.NoLogging);
                         }
                     }
+
+
+                    /* if (currentRequest.PropertyRequests != null && currentRequest.PropertyRequests.Count() > 0)
+                     {
+                         protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6.2", LogType.Error, LogLevel.NoLogging);
+                         if (!currentRequest.Async)
+                         {
+                             protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|7", LogType.Error, LogLevel.NoLogging);
+                             propertyResults = SaveConnectionProperties(matchingConnection, currentRequest.PropertyRequests.ToArray());
+                         }
+                         else
+                         {
+                             protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6.2.1", LogType.Error, LogLevel.NoLogging);
+                             if (matchingConnection == null) protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|MatchCon null", LogType.Error, LogLevel.NoLogging);
+                             protocol.Log(string.Format("QA{0}:|ERR: DCF Connection (" + sourceId + ") | Saving Properties on an Async created connection is not supported. Please use synchronous SaveConnections", protocol.QActionID), LogType.Error, LogLevel.NoLogging);
+                             protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6.2.1.1", LogType.Error, LogLevel.NoLogging);
+                         }
+                     }*/
                     protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6.3", LogType.Error, LogLevel.NoLogging);
                     if (matchingConnection == null && newDestinationConnection == null)
                     {
@@ -1069,6 +1102,8 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 
             return result;
         }
+
+
 
         /// <summary>
         /// This method is used to save both internal and external connections.
@@ -1229,7 +1264,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
         /// <param name="connectionIDs">One or more connection IDs to remove</param>
         /// <returns>Boolean indicating the success of the removal</returns>
         //[DISCodeLibrary(Version = 1)]
-        /*public bool RemoveConnections(int dataMinerID, int elementID, bool bothConnections, bool force, params int[] connectionIDs)
+        public bool RemoveConnections(int dataMinerID, int elementID, bool bothConnections, bool force, params int[] connectionIDs)
         {
             try
             {
@@ -1247,7 +1282,10 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                     return false;
                 }
 
-                HashSet<int> managedNewByThisProtocol;
+                HashSet<int> managedNewByThisProtocol = new HashSet<int>(newConnections.TryGetValue(eleKey, out var newSet) ? newSet : Enumerable.Empty<int>());
+                HashSet<int> managedCurrentByThisProtocol = new HashSet<int>(currentConnections.TryGetValue(eleKey, out var currentSet) ? currentSet : Enumerable.Empty<int>());
+
+                /*HashSet<int> managedNewByThisProtocol;
                 if (!newConnections.TryGetValue(eleKey, out managedNewByThisProtocol))
                 {
                     managedNewByThisProtocol = new HashSet<int>();
@@ -1257,37 +1295,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                 if (!currentConnections.TryGetValue(eleKey, out managedCurrentByThisProtocol))
                 {
                     managedCurrentByThisProtocol = new HashSet<int>();
-                }
-
-                //Optimized
-
-                for(int i = 0; i< connectionIDs.Length; i++)
-                {
-                    int connectionID = connectionIDs[i];
-                    int negconnectionID = -connectionIDs[i];
-
-                    if (force || managedCurrentByThisProtocol.Contains(connectionID) || managedCurrentByThisProtocol.Contains(negconnectionID) || managedNewByThisProtocol.Contains(connectionID) || managedNewByThisProtocol.Contains(negconnectionID))
-                    {
-                        string logMessage = $"QA{protocol.QActionID}|DCF Connection ({connectionID}) | Deleteing COnnection:{connectionID}";
-
-                        DebugLog(logMessage, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
-
-                        if (protocol.DeleteConnectivityConnection(connectionID, dataMinerID, elementID, bothConnections))
-                        {
-                            managedNewByThisProtocol.Remove(connectionID);
-                            managedCurrentByThisProtocol.Remove(connectionID);
-                        }
-                        else
-                        {
-                            string errorMessage = $"QA{protocol.QActionID}: |ERR: DCF Connection ({connectionID})| Removing DCF Connection: {connectionID} Returned False. Connection may not have been removed";
-
-                            protocol.Log(errorMessage, LogType.Error, LogLevel.NoLogging);
-                            finalResult = false;
-                        }
-                    }
-                }
-                
-        //comment later
+                }*/
 
                 for (int u = 0; u < connectionIDs.Length; u++)
                 {
@@ -1307,69 +1315,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
                         }
                     }
                 }
-        //end comment later
-                newConnections[eleKey] = managedNewByThisProtocol;
-                currentConnections[eleKey] = managedCurrentByThisProtocol;
-
-                return finalResult;
-            }
-            catch (Exception e)
-            {
-                protocol.Log(string.Format("QA{0}:|ERR: DCF Connection| (Exception) Value at {1} with Exception:{2}", protocol.QActionID, "RemoveConnections", e.ToString()), LogType.Error, LogLevel.NoLogging);
-            }
-
-            return false;
-        }*/
-
-        public bool RemoveConnections(int dataMinerID, int elementID, bool bothConnections, bool force, params int[] connectionIDs)
-        {
-            try
-            {
-                if (currentConnectionsPID == -1)
-                {
-                    protocol.Log("QA" + protocol.QActionID + "|ERR: DCF Connection|DCFHelper Error: Using RemoveConnections requires the CurrentConnectionsPID to be defined! Please change the Options Objects to include this PID", LogType.Error, LogLevel.NoLogging);
-                    return false;
-                }
-
-                bool finalResult = true;
-                string eleKey = CreateElementKey(dataMinerID, elementID);
-
-                // Early return for unloaded elements
-                if (unloadedElements.Contains(eleKey))
-                {
-                    protocol.Log(string.Format("QA{0}: |ERR: DCF Connection|Ignoring RemoveConnections: Unloaded Element:{1} ", protocol.QActionID, eleKey), LogType.Error, LogLevel.NoLogging);
-                    return false;
-                }
-
-                HashSet<int> managedNewByThisProtocol = new HashSet<int>(newConnections.TryGetValue(eleKey, out var newSet) ? newSet : Enumerable.Empty<int>());
-                HashSet<int> managedCurrentByThisProtocol = new HashSet<int>(currentConnections.TryGetValue(eleKey, out var currentSet) ? currentSet : Enumerable.Empty<int>());
-
-                // Optimized
-                foreach (int connectionID in connectionIDs)
-                {
-                    int absConnectionID = Math.Abs(connectionID);
-
-                    if (force || managedCurrentByThisProtocol.Contains(absConnectionID) || managedNewByThisProtocol.Contains(absConnectionID))
-                    {
-                        string logMessage = $"QA{protocol.QActionID}|DCF Connection ({absConnectionID}) | Deleting Connection:{absConnectionID}";
-
-                        DebugLog(logMessage, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
-
-                        if (protocol.DeleteConnectivityConnection(absConnectionID, dataMinerID, elementID, bothConnections))
-                        {
-                            managedNewByThisProtocol.Remove(absConnectionID);
-                            managedCurrentByThisProtocol.Remove(absConnectionID);
-                        }
-                        else
-                        {
-                            string errorMessage = $"QA{protocol.QActionID}: |ERR: DCF Connection ({absConnectionID})| Removing DCF Connection: {absConnectionID} Returned False. Connection may not have been removed";
-
-                            protocol.Log(errorMessage, LogType.Error, LogLevel.NoLogging);
-                            finalResult = false;
-                        }
-                    }
-                }
-
                 newConnections[eleKey] = managedNewByThisProtocol;
                 currentConnections[eleKey] = managedCurrentByThisProtocol;
 
@@ -1383,8 +1328,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
             return false;
         }
 
-
-
+       
         /// <summary>
         /// Saves a collection of ConnectivityConnectionProperty objects to a given ConnectivityConnection.
         /// <para/>Returns: An array of SaveConnectionPropertyResults in the same order as the requests. If one of the Saves failed, the returned object will indicate Success: false.
@@ -1884,7 +1828,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
         /// Removes all Interface Properties with the given IDs for a specific Connection.
         /// <para/>Returns: A boolean indicating if all deletes were successful. (a failure will be logged as ERR in logging).
         /// </summary>
-        /// <param name="connection">The ConnectivityInterface Object holding the properties.</param>
+        /// <param name="itf">The ConnectivityInterface Object holding the properties.</param>
         /// <param name="force">Indicates if it should force delete all given IDs without checking if they are Managed by this element.</param>
         /// <param name="propertyIDs">One or more Property IDs for the Properties to Delete.</param>
         /// <returns> A boolean indicating if all deletes were successful. (a failure will be logged as ERR in logging).</returns>
@@ -3011,7 +2955,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
         /// </summary>
         /// <param name="protocol">The protocol parameter</param>
         /// <param name="elementKey">The elementKey parameter</param>
-        /// <param name="timeoutSeconds">The timeoutSeconds parameter</param>
+        /// <param name="useCache">The timeoutSeconds parameter</param>
         /// <returns>If the element is started</returns>        
         //[DISCodeLibrary(Version = 1)]
         private bool IsElementStarted(SLProtocol protocol, string elementKey, bool useCache = true)
@@ -3062,7 +3006,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
         /// <param name="timeoutSeconds">The timeoutSeconds parameter</param>
         /// <returns>The bool type object</returns>        
         //[DISCodeLibrary(Version = 1)]
-        private bool IsElementStarted(SLProtocol protocol, int dmaID, int eleID, bool useCache = true)
+        public bool IsElementStarted(SLProtocol protocol, int dmaID, int eleID, bool useCache = true)
         {
             string elementKey = dmaID + "/" + eleID;
             return IsElementStarted(protocol, elementKey, useCache);

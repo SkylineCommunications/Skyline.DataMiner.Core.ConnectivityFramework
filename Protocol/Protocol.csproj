@@ -4,8 +4,8 @@
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
 		<AssemblyName>Skyline.DataMiner.Core.ConnectivityFramework.Protocol</AssemblyName>
-		<PackageVersion>1.0.7.1</PackageVersion>
-		<Version>1.0.7.1</Version>
+		<PackageVersion>1.0.8.2</PackageVersion>
+		<Version>1.0.8.2</Version>
 		<PackageTags>Skyline;DataMiner</PackageTags>
 		<PackageProjectUrl>https://skyline.be</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
