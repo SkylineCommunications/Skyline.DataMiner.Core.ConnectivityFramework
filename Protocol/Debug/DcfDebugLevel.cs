@@ -1,5 +1,8 @@
 ﻿namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Debug
 {
+	/// <summary>
+	/// The DCF debug level.
+	/// </summary>
 	//[DISCodeLibrary(Version = 1)]
 	public enum DcfDebugLevel
 	{

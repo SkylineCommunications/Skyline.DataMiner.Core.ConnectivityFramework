@@ -1,5 +1,8 @@
 ﻿namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Logs
 {
+	/// <summary>
+	/// The DCF log type.
+	/// </summary>
 	//[DISCodeLibrary(Version = 1)]
 	public enum DcfLogType
 	{

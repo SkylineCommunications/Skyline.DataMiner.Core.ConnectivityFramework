@@ -4,6 +4,9 @@ using System.Text;
 
 namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Interfaces
 {
+    /// <summary>
+    /// Represents a DCF interface result.
+    /// </summary>
     public class DcfInterfaceResult
     {
         /// <summary>

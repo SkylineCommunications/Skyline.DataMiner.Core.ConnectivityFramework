@@ -5,6 +5,9 @@ using System.Text;
 
 namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Interfaces
 {
+    /// <summary>
+    /// Represents a single DCF interface result.
+    /// </summary>
     public class DcfInterfaceResultSingle : DcfInterfaceResult
     {
         /// <summary>
