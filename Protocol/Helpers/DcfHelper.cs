@@ -10,7 +10,6 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
 using Interop.SLDms;
-using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Skyline.Protocol.Library.ProtocolDCF;
 using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections;
 using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Comparers;
 using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Debug;

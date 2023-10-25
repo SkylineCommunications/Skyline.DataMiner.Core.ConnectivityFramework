@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
 		<AssemblyName>Skyline.DataMiner.Core.ConnectivityFramework.Protocol</AssemblyName>
@@ -29,6 +29,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Skyline.DataMiner.Dev.Protocol" Version="10.3.9.1" />
+	  <PackageReference Include="Skyline.DataMiner.Dev.Protocol" Version="10.1.1" />
 	</ItemGroup>
 </Project>

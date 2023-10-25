@@ -21,7 +21,7 @@
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "netstandard2.0"
+          "net462"
         ],
         "sources": {
           "C:\\GIT\\Hub\\Skyline.DataMiner.DataSources.Indigo\\Api\\bin\\Debug": {},
@@ -31,8 +31,8 @@
           "https://nuget.pkg.github.com/SkylineCommunications/index.json": {}
         },
         "frameworks": {
-          "netstandard2.0": {
-            "targetAlias": "netstandard2.0",
+          "net462": {
+            "targetAlias": "net462",
             "projectReferences": {}
           }
         },
@@ -43,31 +43,14 @@
         }
       },
       "frameworks": {
-        "netstandard2.0": {
-          "targetAlias": "netstandard2.0",
+        "net462": {
+          "targetAlias": "net462",
           "dependencies": {
-            "NETStandard.Library": {
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[2.0.3, )",
-              "autoReferenced": true
-            },
             "Skyline.DataMiner.Dev.Protocol": {
               "target": "Package",
-              "version": "[10.3.9.1, )"
+              "version": "[10.1.1, )"
             }
           },
-          "imports": [
-            "net461",
-            "net462",
-            "net47",
-            "net471",
-            "net472",
-            "net48",
-            "net481"
-          ],
-          "assetTargetFallback": true,
-          "warn": true,
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.304\\RuntimeIdentifierGraph.json"
         }
       }
