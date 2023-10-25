@@ -342,9 +342,9 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		}
 
 		/// <summary>
-		/// Gets or sets the Async property
+		/// Gets or sets the Asynchronous property
 		/// </summary>
-		public bool Async
+		public bool Asynchronous
 		{
 			get { return asynchronous; }
 			set { asynchronous = value; }

@@ -39,11 +39,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		private bool updated;
 
 		/// <summary>
-		/// The propertyResults field
-		/// </summary>
-		private DcfSaveConnectionPropertyResult[] propertyResults;
-
-		/// <summary>
 		/// Initializes a new instance of the <see cref="DcfSaveConnectionResult" /> class.
 		/// </summary>
 		/// <param name="sourceConnection">The sourceConnection parameter</param>
@@ -51,7 +46,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <param name="internalConnection">The internalConnection parameter</param>
 		/// <param name="updated">The updated parameter</param>
 		/// <param name="propertyResults">The propertyResults parameter</param>
-		public DcfSaveConnectionResult(ConnectivityConnection sourceConnection, ConnectivityConnection destinationConnection, bool internalConnection, bool updated, DcfSaveConnectionPropertyResult[] propertyResults)
+		public DcfSaveConnectionResult(ConnectivityConnection sourceConnection, ConnectivityConnection destinationConnection, bool internalConnection, bool updated)
 		{
 			this.sourceConnection = sourceConnection;
 			if (sourceConnection != null)
@@ -74,7 +69,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 			}
 			this.internalConnection = internalConnection;
 			this.updated = updated;
-			this.propertyResults = propertyResults;
 		}
 
 		/// <summary>
@@ -85,7 +79,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <param name="internalConnection">The internalConnection parameter</param>
 		/// <param name="updated">The updated parameter</param>
 		/// <param name="propertyResults">The propertyResults parameter</param>
-		public DcfSaveConnectionResult(int sourceConnectionID, int destinationConnectionID, bool internalConnection, bool updated, DcfSaveConnectionPropertyResult[] propertyResults)
+		public DcfSaveConnectionResult(int sourceConnectionID, int destinationConnectionID, bool internalConnection, bool updated)
 		{
 			sourceConnection = null;
 			this.sourceConnectionID = sourceConnectionID;
@@ -93,7 +87,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 			this.destinationConnectionID = destinationConnectionID;
 			this.internalConnection = internalConnection;
 			this.updated = updated;
-			this.propertyResults = propertyResults;
 		}
 
 		/// <summary>

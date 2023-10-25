@@ -850,11 +850,11 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
 				{
 					if (currentRequest.PropertyRequests.Count > 0)
 					{
-						currentRequest.Async = false;
+						currentRequest.Asynchronous = false;
 					}
 				}
 
-				result[i] = new Connections.DcfSaveConnectionResult(null, null, false, true, null);
+				result[i] = new Connections.DcfSaveConnectionResult(null, null, false, true);
 				bool updated = true;
 				if (currentRequest == null)
 				{
@@ -947,7 +947,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
 							DebugLog("QA" + protocol.QActionID + "|DCF Connection|Adding Internal Connection:" + currentRequest.CustomName + " | With Connection Filter: " + currentRequest.ConnectionFilter + " | on Element:" + currentRequest.Source.ElementKey, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
 
 							// add an internal connection
-							if (!currentRequest.Async)
+							if (!currentRequest.Asynchronous)
 							{
 								if (!currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName, currentRequest.Destination, currentRequest.ConnectionFilter, false, out matchingConnection, out newDestinationConnection, 420000))
 								{
@@ -970,7 +970,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
 							DebugLog("QA" + protocol.QActionID + "|DCF Connection|Adding External Connection:" + currentRequest.CustomName + " | With Connection Filter: " + currentRequest.ConnectionFilter + " | from Element:" + currentRequest.Source.ElementKey + " To Element:" + currentRequest.Destination.ElementKey, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
 
 							// add an external connection
-							if (!currentRequest.Async)
+							if (!currentRequest.Asynchronous)
 							{
 								if (!currentRequest.Source.AddConnection(currentRequest.CustomName, currentRequest.CustomName + " -RETURN", currentRequest.Destination, currentRequest.ConnectionFilter, currentRequest.CreateExternalReturn, out matchingConnection, out newDestinationConnection, 420000))
 								{
@@ -1055,7 +1055,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
 					if (currentRequest.PropertyRequests != null && currentRequest.PropertyRequests.Count() > 0)
 					{
 						protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6.2", LogType.Error, LogLevel.NoLogging);
-						if (!currentRequest.Async)
+						if (!currentRequest.Asynchronous)
 						{
 							protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|7", LogType.Error, LogLevel.NoLogging);
 							propertyResults = SaveConnectionProperties(matchingConnection, currentRequest.PropertyRequests.ToArray());
@@ -1072,13 +1072,13 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
 					if (matchingConnection == null && newDestinationConnection == null)
 					{
 						protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|8", LogType.Error, LogLevel.NoLogging);
-						result[i] = new DcfSaveConnectionResult(sourceId, destinationId, internalConnection, updated, propertyResults);
+						result[i] = new DcfSaveConnectionResult(sourceId, destinationId, internalConnection, updated);
 						protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|9", LogType.Error, LogLevel.NoLogging);
 					}
 					else
 					{
 						protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|10", LogType.Error, LogLevel.NoLogging);
-						result[i] = new DcfSaveConnectionResult(matchingConnection, newDestinationConnection, internalConnection, updated, propertyResults);
+						result[i] = new DcfSaveConnectionResult(matchingConnection, newDestinationConnection, internalConnection, updated);
 						protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|11", LogType.Error, LogLevel.NoLogging);
 					}
 				}
