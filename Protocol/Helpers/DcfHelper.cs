@@ -1384,7 +1384,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
 				}
 
 				bool fixedProperty = currentRequest.FixedProperty;
-				bool async = currentRequest.Async;
+				bool asynchronous = currentRequest.Asynchronous;
 
 				// Check if the Property already exists.
 				// Based on the Name of the property for this specific connection
@@ -1406,7 +1406,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
 
 					DebugLog("QA" + protocol.QActionID + "|DCF Connection Property|Adding Connection Property:" + newConnectProp.ConnectionPropertyName + ":" + newConnectProp.ConnectionPropertyValue, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
 
-					if (!async)
+					if (!asynchronous)
 					{
 						ConnectivityConnectionProperty propResult;
 						if (connection.AddProperty(newConnectProp.ConnectionPropertyName, newConnectProp.ConnectionPropertyType, newConnectProp.ConnectionPropertyValue, out propResult, 420000))
@@ -1573,7 +1573,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Helpers
 				}
 
 				bool fixedProperty = currentRequest.FixedProperty;
-				bool async = currentRequest.Async;
+				bool asynchronous = currentRequest.Asynchronous;
 
 				// Check if the Property already exists.
 				// Based on the Name of the property for this specific interface
