@@ -6,7 +6,7 @@
 		<AssemblyName>Skyline.DataMiner.Core.ConnectivityFramework.Protocol</AssemblyName>
 		<PackageVersion>1.0.1</PackageVersion>
 		<Version>1.0.1</Version>
-		<PackageTags>Skyline;DataMiner</PackageTags>
+		<PackageTags>Skyline;DataMiner;DCF</PackageTags>
 		<PackageProjectUrl>https://skyline.be</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
@@ -16,7 +16,7 @@
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Authors>SkylineCommunications</Authors>
 		<Company>Skyline Communications</Company>
-		<Description></Description>
+		<Description>Library providing DCF functionality.</Description>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/SkylineCommunications/Skyline.DataMiner.Core.ConnectivityFramework.git</RepositoryUrl>
 		<RootNamespace>Skyline.DataMiner.Core.ConnectivityFramework.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
