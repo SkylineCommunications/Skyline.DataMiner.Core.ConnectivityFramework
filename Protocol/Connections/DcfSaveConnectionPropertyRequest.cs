@@ -34,39 +34,39 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
         /// <summary>
         /// The async field
         /// </summary>
-        private bool async;
+        private bool asynchronous;
 
-        // private ConnectivityConnection connection;
-        // public ConnectivityConnection Connection
-        // {
-        //    get { return connection; }
-        // }
+		// private ConnectivityConnection connection;
+		// public ConnectivityConnection Connection
+		// {
+		//    get { return connection; }
+		// }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DcfSaveConnectionPropertyRequest" /> class.
-        /// </summary>
-        /// <param name="name">The name parameter</param>
-        /// <param name="type">The type parameter</param>
-        /// <param name="value">The value parameter</param>
-        /// <param name="fixedProperty">The fixedProperty parameter</param>
-        /// <param name="async">The async parameter</param>  
-        public DcfSaveConnectionPropertyRequest(string name, string type, string value, bool fixedProperty = false, bool async = true)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="DcfSaveConnectionPropertyRequest" /> class.
+		/// </summary>
+		/// <param name="name">The name parameter</param>
+		/// <param name="type">The type parameter</param>
+		/// <param name="value">The value parameter</param>
+		/// <param name="fixedProperty">The fixedProperty parameter</param>
+		/// <param name="asynchronous">The asynchronous parameter</param>  
+		public DcfSaveConnectionPropertyRequest(string name, string type, string value, bool fixedProperty = false, bool asynchronous = true)
         {
             this.name = name;
             this.type = type;
             this.value = value;
             this.fixedProperty = fixedProperty;
-            this.async = async;
+            this.asynchronous = asynchronous;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DcfSaveConnectionPropertyRequest" /> class.
-        /// </summary>
-        /// <param name="property">The property parameter</param>
-        /// <param name="fixedProperty">The fixedProperty parameter</param>
-        /// <param name="async">The async parameter</param>  
-        public DcfSaveConnectionPropertyRequest(ConnectivityConnectionProperty property, bool fixedProperty = false, bool async = true)
-            : this(property.ConnectionPropertyName, property.ConnectionPropertyType, property.ConnectionPropertyValue, fixedProperty, async)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="DcfSaveConnectionPropertyRequest" /> class.
+		/// </summary>
+		/// <param name="property">The property parameter</param>
+		/// <param name="fixedProperty">The fixedProperty parameter</param>
+		/// <param name="asynchronous">The asynchronous parameter</param>  
+		public DcfSaveConnectionPropertyRequest(ConnectivityConnectionProperty property, bool fixedProperty = false, bool asynchronous = true)
+            : this(property.ConnectionPropertyName, property.ConnectionPropertyType, property.ConnectionPropertyValue, fixedProperty, asynchronous)
         {
         }
 
@@ -119,7 +119,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
         /// </summary>  
         public bool Async
         {
-            get { return async; }
+            get { return asynchronous; }
         }
     }
 }

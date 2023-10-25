@@ -48,7 +48,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <summary>
 		/// The async field
 		/// </summary>
-		private bool async;
+		private bool asynchronous;
 
 		/// <summary>
 		/// The propertyRequests field
@@ -68,13 +68,13 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <param name="source">The source parameter</param>
 		/// <param name="destination">The destination parameter</param>
 		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="async">The async parameter</param>
-		public DcfSaveConnectionRequest(ConnectivityInterface source, ConnectivityInterface destination, bool fixedConnection = false, bool async = false)
+		/// <param name="asynchronous">The asynchronous parameter</param>
+		public DcfSaveConnectionRequest(ConnectivityInterface source, ConnectivityInterface destination, bool fixedConnection = false, bool asynchronous = false)
 		{
 			this.fixedConnection = fixedConnection;
 			this.source = source;
 			this.destination = destination;
-			this.async = async;
+			this.asynchronous = asynchronous;
 		}
 
 		/// <summary>
@@ -84,9 +84,9 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <param name="destination">The destination parameter</param>
 		/// <param name="connectionType">The connectionType parameter</param>
 		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="async">The async parameter</param>
-		public DcfSaveConnectionRequest(ConnectivityInterface source, ConnectivityInterface destination, SaveConnectionType connectionType, bool fixedConnection = false, bool async = false)
-			: this(source, destination, fixedConnection, async)
+		/// <param name="asynchronous">The asynchronous parameter</param>
+		public DcfSaveConnectionRequest(ConnectivityInterface source, ConnectivityInterface destination, SaveConnectionType connectionType, bool fixedConnection = false, bool asynchronous = false)
+			: this(source, destination, fixedConnection, asynchronous)
 		{
 			this.connectionType = connectionType;
 		}
@@ -98,9 +98,9 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <param name="destination">The destination parameter</param>
 		/// <param name="customName">The customName parameter</param>
 		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="async">The async parameter</param>
-		public DcfSaveConnectionRequest(ConnectivityInterface source, ConnectivityInterface destination, string customName, bool fixedConnection = false, bool async = false)
-			: this(source, destination, fixedConnection, async)
+		/// <param name="asynchronous">The asynchronous parameter</param>
+		public DcfSaveConnectionRequest(ConnectivityInterface source, ConnectivityInterface destination, string customName, bool fixedConnection = false, bool asynchronous = false)
+			: this(source, destination, fixedConnection, asynchronous)
 		{
 			this.customName = customName;
 		}
@@ -113,9 +113,9 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <param name="customName">The customName parameter</param>
 		/// <param name="connectionFilter">The connectionFilter parameter</param>
 		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="async">The async parameter</param>
-		public DcfSaveConnectionRequest(ConnectivityInterface source, ConnectivityInterface destination, string customName, string connectionFilter, bool fixedConnection = false, bool async = false)
-			: this(source, destination, fixedConnection, async)
+		/// <param name="asynchronous">The asynchronous parameter</param>
+		public DcfSaveConnectionRequest(ConnectivityInterface source, ConnectivityInterface destination, string customName, string connectionFilter, bool fixedConnection = false, bool asynchronous = false)
+			: this(source, destination, fixedConnection, asynchronous)
 		{
 			this.customName = customName;
 			customFilter = connectionFilter;
@@ -129,9 +129,9 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <param name="connectionType">The connectionType parameter</param>
 		/// <param name="customName">The customName parameter</param>
 		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="async">The async parameter</param>
-		public DcfSaveConnectionRequest(ConnectivityInterface source, ConnectivityInterface destination, SaveConnectionType connectionType, string customName, bool fixedConnection = false, bool async = false)
-			: this(source, destination, connectionType, fixedConnection, async)
+		/// <param name="asynchronous">The asynchronous parameter</param>
+		public DcfSaveConnectionRequest(ConnectivityInterface source, ConnectivityInterface destination, SaveConnectionType connectionType, string customName, bool fixedConnection = false, bool asynchronous = false)
+			: this(source, destination, connectionType, fixedConnection, asynchronous)
 		{
 			this.customName = customName;
 		}
@@ -145,9 +145,9 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <param name="customName">The customName parameter</param>
 		/// <param name="connectionFilter">The connectionFilter parameter</param>
 		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="async">The async parameter</param>
-		public DcfSaveConnectionRequest(ConnectivityInterface source, ConnectivityInterface destination, SaveConnectionType connectionType, string customName, string connectionFilter, bool fixedConnection = false, bool async = false)
-			: this(source, destination, connectionType, fixedConnection, async)
+		/// <param name="asynchronous">The asynchronous parameter</param>
+		public DcfSaveConnectionRequest(ConnectivityInterface source, ConnectivityInterface destination, SaveConnectionType connectionType, string customName, string connectionFilter, bool fixedConnection = false, bool asynchronous = false)
+			: this(source, destination, connectionType, fixedConnection, asynchronous)
 		{
 			this.customName = customName;
 			customFilter = connectionFilter;
@@ -162,8 +162,8 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <param name="source">The source parameter</param>
 		/// <param name="destination">The destination parameter</param>
 		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="async">The async parameter</param>
-		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, bool fixedConnection = false, bool async = false)
+		/// <param name="asynchronous">The asynchronous parameter</param>
+		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, bool fixedConnection = false, bool asynchronous = false)
 		{
 			var result = dcf.GetInterfaces(source, destination);
 			this.source = null;
@@ -185,7 +185,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 				}
 			}
 			this.fixedConnection = fixedConnection;
-			this.async = async;
+			this.asynchronous = asynchronous;
 		}
 
 		/// <summary>
@@ -196,9 +196,9 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <param name="destination">The destination parameter</param>
 		/// <param name="connectionType">The connectionType parameter</param>
 		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="async">The async parameter</param>
-		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, SaveConnectionType connectionType, bool fixedConnection = false, bool async = false)
-			: this(dcf, source, destination, fixedConnection, async)
+		/// <param name="asynchronous">The asynchronous parameter</param>
+		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, SaveConnectionType connectionType, bool fixedConnection = false, bool asynchronous = false)
+			: this(dcf, source, destination, fixedConnection, asynchronous)
 		{
 			this.connectionType = connectionType;
 		}
@@ -212,9 +212,9 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <param name="connectionType">The connectionType parameter</param>
 		/// <param name="customName">The customName parameter</param>
 		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="async">The async parameter</param>
-		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, SaveConnectionType connectionType, string customName, bool fixedConnection = false, bool async = false)
-			: this(dcf, source, destination, connectionType, fixedConnection, async)
+		/// <param name="asynchronous">The asynchronous parameter</param>
+		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, SaveConnectionType connectionType, string customName, bool fixedConnection = false, bool asynchronous = false)
+			: this(dcf, source, destination, connectionType, fixedConnection, asynchronous)
 		{
 			this.customName = customName;
 		}
@@ -227,9 +227,9 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <param name="destination">The destination parameter</param>
 		/// <param name="customName">The customName parameter</param>
 		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="async">The async parameter</param>
-		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, string customName, bool fixedConnection = false, bool async = false)
-			: this(dcf, source, destination, fixedConnection, async)
+		/// <param name="asynchronous">The asynchronous parameter</param>
+		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, string customName, bool fixedConnection = false, bool asynchronous = false)
+			: this(dcf, source, destination, fixedConnection, asynchronous)
 		{
 			this.customName = customName;
 		}
@@ -243,9 +243,9 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <param name="customName">The customName parameter</param>
 		/// <param name="connectionFilter">The connectionFilter parameter</param>
 		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="async">The async parameter</param>
-		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, string customName, string connectionFilter, bool fixedConnection = false, bool async = false)
-			: this(dcf, source, destination, fixedConnection, async)
+		/// <param name="asynchronous">The asynchronous parameter</param>
+		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, string customName, string connectionFilter, bool fixedConnection = false, bool asynchronous = false)
+			: this(dcf, source, destination, fixedConnection, asynchronous)
 		{
 			this.customName = customName;
 			customFilter = connectionFilter;
@@ -261,9 +261,9 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <param name="customName">The customName parameter</param>
 		/// <param name="connectionFilter">The connectionFilter parameter</param>
 		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="async">The async parameter</param>
-		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, SaveConnectionType connectionType, string customName, string connectionFilter, bool fixedConnection = false, bool async = false)
-			: this(dcf, source, destination, connectionType, fixedConnection, async)
+		/// <param name="asynchronous">The asynchronous parameter</param>
+		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, SaveConnectionType connectionType, string customName, string connectionFilter, bool fixedConnection = false, bool asynchronous = false)
+			: this(dcf, source, destination, connectionType, fixedConnection, asynchronous)
 		{
 			this.customName = customName;
 			customFilter = connectionFilter;
@@ -346,8 +346,8 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// </summary>
 		public bool Async
 		{
-			get { return async; }
-			set { async = value; }
+			get { return asynchronous; }
+			set { asynchronous = value; }
 		}
 
 		/// <summary>
