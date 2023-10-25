@@ -80,8 +80,8 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		/// <summary>
 		/// Initializes a new instance of the <see cref="DcfSaveConnectionResult" /> class.
 		/// </summary>
-		/// <param name="sourceConnection">The sourceConnection parameter</param>
-		/// <param name="destinationConnection">The destinationConnection parameter</param>
+		/// <param name="sourceConnectionID">The sourceConnection parameter</param>
+		/// <param name="destinationConnectionID">The destinationConnection parameter</param>
 		/// <param name="internalConnection">The internalConnection parameter</param>
 		/// <param name="updated">The updated parameter</param>
 		/// <param name="propertyResults">The propertyResults parameter</param>

@@ -16,7 +16,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Comparers
 		private Func<T, object> keySelector;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="CustomComparer" /> class.
+		/// Initializes a new instance of the <see cref="CustomComparer{T}" /> class.
 		/// </summary>
 		/// <param name="keySelector">The keySelector parameter</param>
 		public CustomComparer(Func<T, object> keySelector)

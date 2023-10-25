@@ -28,7 +28,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Collections
 		private Dictionary<string, ILookup<object, T>> _indexes;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="FastCollection" /> class.
+		/// Initializes a new instance of the <see cref="FastCollection{T}" /> class.
 		/// </summary>
 		/// <param name="data">The data parameter</param>
 		public FastCollection(IList<T> data)
@@ -39,7 +39,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Collections
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="FastCollection" /> class.
+		/// Initializes a new instance of the <see cref="FastCollection{T}" /> class.
 		/// </summary>
 		public FastCollection()
 		{

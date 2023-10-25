@@ -4,6 +4,9 @@ using System.Text;
 
 namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Columns
 {
+    /// <summary>
+    /// Represents a DVE column.
+    /// </summary>
     public struct DveColumn
     {
         /// <summary>

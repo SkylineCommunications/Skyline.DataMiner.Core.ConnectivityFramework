@@ -1,17 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
+﻿namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 {
-    /// <summary>
-    /// Indicates if the connection is internal, external or both.
-    /// </summary>
-    //[DISCodeLibrary(Version = 1)]
-    public enum ConnectionType
-    {
-        Internal,
-        External,
-        Both
-    }
+	/// <summary>
+	/// Indicates if the connection is internal, external or both.
+	/// </summary>
+	//[DISCodeLibrary(Version = 1)]
+	public enum ConnectionType
+	{
+		/// <summary>
+		/// Internal.
+		/// </summary>
+		Internal,
+
+		/// <summary>
+		/// External.
+		/// </summary>
+		External,
+
+		/// <summary>
+		/// Both.
+		/// </summary>
+		Both
+	}
 }
