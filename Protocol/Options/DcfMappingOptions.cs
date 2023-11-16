@@ -1,4 +1,8 @@
-﻿namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Options
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Options
 {
 	/// <summary>
 	/// Provide PIDs that will hold Mapping of all Connections and Properties Managed by this Element. Leaving PIDs out will create a more efficient DCFHelper Object but with limited functionality.

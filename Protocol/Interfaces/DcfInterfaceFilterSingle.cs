@@ -1,4 +1,8 @@
-﻿using DcfPropertyFilter = Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Filters.DcfPropertyFilter;
+﻿using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Filters;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using DcfPropertyFilter = Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Filters.DcfPropertyFilter;
 
 namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Interfaces
 {

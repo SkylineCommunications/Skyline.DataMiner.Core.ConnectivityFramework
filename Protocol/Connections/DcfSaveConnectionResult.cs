@@ -1,4 +1,7 @@
 ﻿using Skyline.DataMiner.Scripting;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 {

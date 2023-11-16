@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-
+﻿using Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Interfaces;
 using Skyline.DataMiner.Scripting;
 
 namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
@@ -155,119 +154,119 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 
 		// Allow direct usage of DcfInterfaceFilter
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="DcfSaveConnectionRequest" /> class.
-		/// </summary>
-		/// <param name="dcf">The dcf parameter</param>
-		/// <param name="source">The source parameter</param>
-		/// <param name="destination">The destination parameter</param>
-		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="asynchronous">The asynchronous parameter</param>
-		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, bool fixedConnection = false, bool asynchronous = false)
-		{
-			var result = dcf.GetInterfaces(source, destination);
-			this.source = null;
-			this.destination = null;
-			if (result[0] is Interfaces.DcfInterfaceResultSingle)
-			{
-				Interfaces.DcfInterfaceResultSingle singleResult = result[0] as Interfaces.DcfInterfaceResultSingle;
-				if (singleResult != null)
-				{
-					this.source = singleResult.DCFInterface;
-				}
-			}
-			if (result[1] is Interfaces.DcfInterfaceResultSingle)
-			{
-				Interfaces.DcfInterfaceResultSingle singleResult = result[1] as Interfaces.DcfInterfaceResultSingle;
-				if (singleResult != null)
-				{
-					this.destination = singleResult.DCFInterface;
-				}
-			}
-			this.fixedConnection = fixedConnection;
-			this.asynchronous = asynchronous;
-		}
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DcfSaveConnectionRequest" /> class.
+        /// </summary>
+        /// <param name="dcf">The dcf parameter</param>
+        /// <param name="source">The source parameter</param>
+        /// <param name="destination">The destination parameter</param>
+        /// <param name="fixedConnection">The fixedConnection parameter</param>
+        /// <param name="async">The async parameter</param>  
+        public DcfSaveConnectionRequest(DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, bool fixedConnection = false, bool async = false)
+        {
+            var result = dcf.GetInterfaces(source, destination);
+            this.source = null;
+            this.destination = null;
+            if (result[0] is Interfaces.DcfInterfaceResultSingle)
+            {
+                Interfaces.DcfInterfaceResultSingle singleResult = result[0] as Interfaces.DcfInterfaceResultSingle;
+                if (singleResult != null)
+                {
+                    this.source = singleResult.DCFInterface;
+                }
+            }
+            if (result[1] is Interfaces.DcfInterfaceResultSingle)
+            {
+                Interfaces.DcfInterfaceResultSingle singleResult = result[1] as Interfaces.DcfInterfaceResultSingle;
+                if (singleResult != null)
+                {
+                    this.destination = singleResult.DCFInterface;
+                }
+            }
+            this.fixedConnection = fixedConnection;
+            this.async = async;
+        }
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="DcfSaveConnectionRequest" /> class.
-		/// </summary>
-		/// <param name="dcf">The dcf parameter</param>
-		/// <param name="source">The source parameter</param>
-		/// <param name="destination">The destination parameter</param>
-		/// <param name="connectionType">The connectionType parameter</param>
-		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="asynchronous">The asynchronous parameter</param>
-		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, SaveConnectionType connectionType, bool fixedConnection = false, bool asynchronous = false)
-			: this(dcf, source, destination, fixedConnection, asynchronous)
-		{
-			this.connectionType = connectionType;
-		}
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DcfSaveConnectionRequest" /> class.
+        /// </summary>
+        /// <param name="dcf">The dcf parameter</param>
+        /// <param name="source">The source parameter</param>
+        /// <param name="destination">The destination parameter</param>
+        /// <param name="connectionType">The connectionType parameter</param>
+        /// <param name="fixedConnection">The fixedConnection parameter</param>
+        /// <param name="async">The async parameter</param>  
+        public DcfSaveConnectionRequest(DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, SaveConnectionType connectionType, bool fixedConnection = false, bool async = false)
+            : this(dcf, source, destination, fixedConnection, async)
+        {
+            this.connectionType = connectionType;
+        }
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="DcfSaveConnectionRequest" /> class.
-		/// </summary>
-		/// <param name="dcf">The dcf parameter</param>
-		/// <param name="source">The source parameter</param>
-		/// <param name="destination">The destination parameter</param>
-		/// <param name="connectionType">The connectionType parameter</param>
-		/// <param name="customName">The customName parameter</param>
-		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="asynchronous">The asynchronous parameter</param>
-		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, SaveConnectionType connectionType, string customName, bool fixedConnection = false, bool asynchronous = false)
-			: this(dcf, source, destination, connectionType, fixedConnection, asynchronous)
-		{
-			this.customName = customName;
-		}
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DcfSaveConnectionRequest" /> class.
+        /// </summary>
+        /// <param name="dcf">The dcf parameter</param>
+        /// <param name="source">The source parameter</param>
+        /// <param name="destination">The destination parameter</param>
+        /// <param name="connectionType">The connectionType parameter</param>
+        /// <param name="customName">The customName parameter</param>
+        /// <param name="fixedConnection">The fixedConnection parameter</param>
+        /// <param name="async">The async parameter</param>  
+        public DcfSaveConnectionRequest(DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, SaveConnectionType connectionType, string customName, bool fixedConnection = false, bool async = false)
+            : this(dcf, source, destination, connectionType, fixedConnection, async)
+        {
+            this.customName = customName;
+        }
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="DcfSaveConnectionRequest" /> class.
-		/// </summary>
-		/// <param name="dcf">The dcf parameter</param>
-		/// <param name="source">The source parameter</param>
-		/// <param name="destination">The destination parameter</param>
-		/// <param name="customName">The customName parameter</param>
-		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="asynchronous">The asynchronous parameter</param>
-		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, string customName, bool fixedConnection = false, bool asynchronous = false)
-			: this(dcf, source, destination, fixedConnection, asynchronous)
-		{
-			this.customName = customName;
-		}
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DcfSaveConnectionRequest" /> class.
+        /// </summary>
+        /// <param name="dcf">The dcf parameter</param>
+        /// <param name="source">The source parameter</param>
+        /// <param name="destination">The destination parameter</param>
+        /// <param name="customName">The customName parameter</param>
+        /// <param name="fixedConnection">The fixedConnection parameter</param>
+        /// <param name="async">The async parameter</param>  
+        public DcfSaveConnectionRequest(DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, string customName, bool fixedConnection = false, bool async = false)
+            : this(dcf, source, destination, fixedConnection, async)
+        {
+            this.customName = customName;
+        }
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="DcfSaveConnectionRequest" /> class.
-		/// </summary>
-		/// <param name="dcf">The dcf parameter</param>
-		/// <param name="source">The source parameter</param>
-		/// <param name="destination">The destination parameter</param>
-		/// <param name="customName">The customName parameter</param>
-		/// <param name="connectionFilter">The connectionFilter parameter</param>
-		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="asynchronous">The asynchronous parameter</param>
-		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, string customName, string connectionFilter, bool fixedConnection = false, bool asynchronous = false)
-			: this(dcf, source, destination, fixedConnection, asynchronous)
-		{
-			this.customName = customName;
-			customFilter = connectionFilter;
-		}
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DcfSaveConnectionRequest" /> class.
+        /// </summary>
+        /// <param name="dcf">The dcf parameter</param>
+        /// <param name="source">The source parameter</param>
+        /// <param name="destination">The destination parameter</param>
+        /// <param name="customName">The customName parameter</param>
+        /// <param name="connectionFilter">The connectionFilter parameter</param>
+        /// <param name="fixedConnection">The fixedConnection parameter</param>
+        /// <param name="async">The async parameter</param>  
+        public DcfSaveConnectionRequest(DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, string customName, string connectionFilter, bool fixedConnection = false, bool async = false)
+            : this(dcf, source, destination, fixedConnection, async)
+        {
+            this.customName = customName;
+            customFilter = connectionFilter;
+        }
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="DcfSaveConnectionRequest" /> class.
-		/// </summary>
-		/// <param name="dcf">The dcf parameter</param>
-		/// <param name="source">The source parameter</param>
-		/// <param name="destination">The destination parameter</param>
-		/// <param name="connectionType">The connectionType parameter</param>
-		/// <param name="customName">The customName parameter</param>
-		/// <param name="connectionFilter">The connectionFilter parameter</param>
-		/// <param name="fixedConnection">The fixedConnection parameter</param>
-		/// <param name="asynchronous">The asynchronous parameter</param>
-		public DcfSaveConnectionRequest(Helpers.DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, SaveConnectionType connectionType, string customName, string connectionFilter, bool fixedConnection = false, bool asynchronous = false)
-			: this(dcf, source, destination, connectionType, fixedConnection, asynchronous)
-		{
-			this.customName = customName;
-			customFilter = connectionFilter;
-		}
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DcfSaveConnectionRequest" /> class.
+        /// </summary>
+        /// <param name="dcf">The dcf parameter</param>
+        /// <param name="source">The source parameter</param>
+        /// <param name="destination">The destination parameter</param>
+        /// <param name="connectionType">The connectionType parameter</param>
+        /// <param name="customName">The customName parameter</param>
+        /// <param name="connectionFilter">The connectionFilter parameter</param>
+        /// <param name="fixedConnection">The fixedConnection parameter</param>
+        /// <param name="async">The async parameter</param>  
+        public DcfSaveConnectionRequest(DcfHelper dcf, Interfaces.DcfInterfaceFilterSingle source, Interfaces.DcfInterfaceFilterSingle destination, SaveConnectionType connectionType, string customName, string connectionFilter, bool fixedConnection = false, bool async = false)
+            : this(dcf, source, destination, connectionType, fixedConnection, async)
+        {
+            this.customName = customName;
+            customFilter = connectionFilter;
+        }
 
 		/// <summary>
 		/// Gets or sets the Source property
