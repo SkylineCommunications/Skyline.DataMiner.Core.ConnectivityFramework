@@ -1,5 +1,9 @@
 ﻿namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Logs
 {
+	using System;
+	using System.Collections.Generic;
+	using System.Text;
+
 	/// <summary>
 	/// The DCF log type.
 	/// </summary>
