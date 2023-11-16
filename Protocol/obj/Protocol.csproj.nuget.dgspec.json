@@ -5,11 +5,7 @@
   },
   "projects": {
     "C:\\GIT\\Hub\\Skyline.DataMiner.Core.ConnectivityFramework\\Protocol\\Protocol.csproj": {
-<<<<<<< HEAD
       "version": "1.0.1",
-=======
-      "version": "1.0.8.2",
->>>>>>> benchmark
       "restore": {
         "projectUniqueName": "C:\\GIT\\Hub\\Skyline.DataMiner.Core.ConnectivityFramework\\Protocol\\Protocol.csproj",
         "projectName": "Skyline.DataMiner.Core.ConnectivityFramework.Protocol",
@@ -55,20 +51,6 @@
               "version": "[10.1.1, )"
             }
           },
-<<<<<<< HEAD
-=======
-          "imports": [
-            "net461",
-            "net462",
-            "net47",
-            "net471",
-            "net472",
-            "net48",
-            "net481"
-          ],
-          "assetTargetFallback": true,
-          "warn": true,
->>>>>>> benchmark
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.304\\RuntimeIdentifierGraph.json"
         }
       }

@@ -35,7 +35,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Interfaces
         /// <summary>
         /// The async field
         /// </summary>
-        private bool asynchronous;
+        private bool async;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="DcfSaveConnectionPropertyRequest" /> class.
@@ -51,7 +51,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Interfaces
             this.type = type;
             this.value = value;
             this.fixedProperty = fixedProperty;
-            this.asynchronous = asynchronous;
+            this.async = asynchronous;
         }
 
 		/// <summary>
@@ -114,7 +114,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Interfaces
         /// </summary>  
         public bool Asynchronous
         {
-            get { return asynchronous; }
+            get { return async; }
         }
     }
 }

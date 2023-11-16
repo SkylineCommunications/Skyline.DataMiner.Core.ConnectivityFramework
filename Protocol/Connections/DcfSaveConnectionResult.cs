@@ -1,4 +1,5 @@
 ﻿using Skyline.DataMiner.Scripting;
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -42,14 +43,19 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		private bool updated;
 
 		/// <summary>
+		/// The propertyResults field
+		/// </summary>
+		private DcfSaveConnectionPropertyResult[] propertyResults;
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="DcfSaveConnectionResult" /> class.
 		/// </summary>
 		/// <param name="sourceConnection">The sourceConnection parameter</param>
 		/// <param name="destinationConnection">The destinationConnection parameter</param>
 		/// <param name="internalConnection">The internalConnection parameter</param>
 		/// <param name="updated">The updated parameter</param>
-		/// <param name="propertyResults">The propertyResults parameter</param>
-		public DcfSaveConnectionResult(ConnectivityConnection sourceConnection, ConnectivityConnection destinationConnection, bool internalConnection, bool updated)
+		/// <param name="propertyResults">The propertyResults parameter</param>  
+		public DcfSaveConnectionResult(ConnectivityConnection sourceConnection, ConnectivityConnection destinationConnection, bool internalConnection, bool updated, DcfSaveConnectionPropertyResult[] propertyResults)
 		{
 			this.sourceConnection = sourceConnection;
 			if (sourceConnection != null)
@@ -72,17 +78,18 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 			}
 			this.internalConnection = internalConnection;
 			this.updated = updated;
+			this.propertyResults = propertyResults;
 		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="DcfSaveConnectionResult" /> class.
 		/// </summary>
-		/// <param name="sourceConnectionID">The sourceConnection parameter</param>
-		/// <param name="destinationConnectionID">The destinationConnection parameter</param>
+		/// <param name="sourceConnection">The sourceConnection parameter</param>
+		/// <param name="destinationConnection">The destinationConnection parameter</param>
 		/// <param name="internalConnection">The internalConnection parameter</param>
 		/// <param name="updated">The updated parameter</param>
-		/// <param name="propertyResults">The propertyResults parameter</param>
-		public DcfSaveConnectionResult(int sourceConnectionID, int destinationConnectionID, bool internalConnection, bool updated)
+		/// <param name="propertyResults">The propertyResults parameter</param>  
+		public DcfSaveConnectionResult(int sourceConnectionID, int destinationConnectionID, bool internalConnection, bool updated, DcfSaveConnectionPropertyResult[] propertyResults)
 		{
 			sourceConnection = null;
 			this.sourceConnectionID = sourceConnectionID;
@@ -90,11 +97,13 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 			this.destinationConnectionID = destinationConnectionID;
 			this.internalConnection = internalConnection;
 			this.updated = updated;
+			this.propertyResults = propertyResults;
 		}
+
 
 		/// <summary>
 		/// Gets the SourceConnection ID
-		/// </summary>
+		/// </summary>  
 		public int SourceConnectionID
 		{
 			get { return sourceConnectionID; }
@@ -103,7 +112,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 
 		/// <summary>
 		/// Gets the DestinationConnection ID
-		/// </summary>
+		/// </summary>  
 		public int DestinationConnectionID
 		{
 			get { return destinationConnectionID; }
@@ -112,7 +121,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 
 		/// <summary>
 		/// Gets the SourceConnection property
-		/// </summary>
+		/// </summary>  
 		public ConnectivityConnection SourceConnection
 		{
 			get { return sourceConnection; }
@@ -121,7 +130,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 
 		/// <summary>
 		/// Gets the DestinationConnection property
-		/// </summary>
+		/// </summary>  
 		public ConnectivityConnection DestinationConnection
 		{
 			get { return destinationConnection; }
@@ -130,7 +139,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 
 		/// <summary>
 		/// Gets the InternalConnection property
-		/// </summary>
+		/// </summary>  
 		public bool InternalConnection
 		{
 			get { return internalConnection; }
@@ -139,7 +148,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 
 		/// <summary>
 		/// Gets the Updated property
-		/// </summary>
+		/// </summary>  
 		public bool Updated
 		{
 			get { return updated; }
