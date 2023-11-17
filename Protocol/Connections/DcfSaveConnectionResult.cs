@@ -154,5 +154,10 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 			get { return updated; }
 			private set { updated = value; }
 		}
+
+		/// <summary>
+		/// Gets the DcfSaveConnectionPropertyResults
+		/// </summary>
+		public DcfSaveConnectionPropertyResult[] DcfSaveConnectionPropertyResults { get { return propertyResults; } }
 	}
 }

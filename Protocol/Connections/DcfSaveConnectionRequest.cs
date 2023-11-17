@@ -49,7 +49,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Connections
 		private bool createExternalReturn = true;
 
 		/// <summary>
-		/// The async field
+		/// The asynchronous field
 		/// </summary>
 		private bool asynchronous;
 
