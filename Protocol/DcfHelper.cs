@@ -1361,7 +1361,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 				}
 
 				bool fixedProperty = currentRequest.FixedProperty;
-				bool async = currentRequest.Asynchronous;
+				bool asynchronous = currentRequest.Asynchronous;
 
 				// Check if the Property already exists.
 				// Based on the Name of the property for this specific connection
@@ -1383,7 +1383,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 
 					DebugLog("QA" + protocol.QActionID + "|DCF Connection Property|Adding Connection Property:" + newConnectProp.ConnectionPropertyName + ":" + newConnectProp.ConnectionPropertyValue, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
 
-					if (!async)
+					if (!asynchronous)
 					{
 						ConnectivityConnectionProperty propResult;
 						if (connection.AddProperty(newConnectProp.ConnectionPropertyName, newConnectProp.ConnectionPropertyType, newConnectProp.ConnectionPropertyValue, out propResult, 420000))
@@ -1550,7 +1550,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 				}
 
 				bool fixedProperty = currentRequest.FixedProperty;
-				bool async = currentRequest.Asynchronous;
+				bool asynchronous = currentRequest.Asynchronous;
 
 				// Check if the Property already exists.
 				// Based on the Name of the property for this specific interface
@@ -1571,7 +1571,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 					// Note if external, software will auto-sync the properties by default
 
 					DebugLog("QA" + protocol.QActionID + "|DCF Interface Property|Adding Interface Property:" + newInterfaceProp.InterfacePropertyName + ":" + newInterfaceProp.InterfacePropertyValue, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
-					if (!async)
+					if (!asynchronous)
 					{
 						ConnectivityInterfaceProperty propResult;
 						if (connectivityInterface.AddProperty(newInterfaceProp.InterfacePropertyName, newInterfaceProp.InterfacePropertyType, newInterfaceProp.InterfacePropertyValue, out propResult, 420000))
