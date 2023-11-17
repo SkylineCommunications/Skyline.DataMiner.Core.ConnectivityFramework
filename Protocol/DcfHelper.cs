@@ -30,6 +30,9 @@ using SyncOption = Skyline.DataMiner.Core.ConnectivityFramework.Protocol.Options
 
 namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 {
+	/// <summary>
+	/// Represents a DCF helper.
+	/// </summary>
 	public class DcfHelper : IDisposable
 	{
 		//Indicates that even if an element is 'stopped' it will check X seconds for startup
@@ -49,7 +52,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 
 		private HashSet<string> unloadedElements = new HashSet<string>();
 
-		private SyncOption helperType;
+		private readonly SyncOption helperType;
 
 		private int currentInterfacesPropertyPID = -1;
 
@@ -73,19 +76,19 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 
 		private string localElementKey;
 
-		private Dictionary<string, FastCollection<ConnectivityInterfaceProperty>> cachedInterfacePropertiesPerElement = new Dictionary<string, FastCollection<ConnectivityInterfaceProperty>>();
+		private readonly Dictionary<string, FastCollection<ConnectivityInterfaceProperty>> cachedInterfacePropertiesPerElement = new Dictionary<string, FastCollection<ConnectivityInterfaceProperty>>();
 
-		private Dictionary<string, FastCollection<ConnectivityInterface>> cachedInterfacesPerElement = new Dictionary<string, FastCollection<ConnectivityInterface>>();
+		private readonly Dictionary<string, FastCollection<ConnectivityInterface>> cachedInterfacesPerElement = new Dictionary<string, FastCollection<ConnectivityInterface>>();
 
-		private Dictionary<string, FastCollection<ConnectivityConnection>> cachedConnectionPerElement = new Dictionary<string, FastCollection<ConnectivityConnection>>();
+		private readonly Dictionary<string, FastCollection<ConnectivityConnection>> cachedConnectionPerElement = new Dictionary<string, FastCollection<ConnectivityConnection>>();
 
-		private Dictionary<string, FastCollection<ConnectivityConnectionProperty>> cachedConnectionPropertiesPerElement = new Dictionary<string, FastCollection<ConnectivityConnectionProperty>>();
+		private readonly Dictionary<string, FastCollection<ConnectivityConnectionProperty>> cachedConnectionPropertiesPerElement = new Dictionary<string, FastCollection<ConnectivityConnectionProperty>>();
 
 		private HashSet<string> polledConnectionProperties = new HashSet<string>();
 
 		private HashSet<string> polledInterfaceProperties = new HashSet<string>();
 
-		private DcfDebugLevel debugLevel = DcfDebugLevel.None;
+		private readonly DcfDebugLevel debugLevel = DcfDebugLevel.None;
 
 		private HashSet<string> checkedElements = new HashSet<string>();
 
@@ -281,7 +284,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 		/// <para/>Returns: An array with DcfInterfaceResult Objects in the same order as the requested UIDS, if an Interface (or interfaces) was not found then this DcfInterfaceResult will be null! Be sure to check for 'null' values before using a result!
 		/// </summary>
 		/// <param name="refresh">Set To True if you want to force this method to perform a protocol.GetAllInterfaces and refresh it's internal Cache.</param>
-		/// <param name="UIDS">One or more DcfInterfaceFilter objects that identify a unique interface (can be both internal, external or a mix of both)</param>
+		/// <param name="uids">One or more DcfInterfaceFilter objects that identify a unique interface (can be both internal, external or a mix of both)</param>
 		/// <returns>An array with DcfInterfaceResult Objects in the same order as the requested UIDS, if an Interface (or interfaces) was not found then this DcfInterfaceResult will be null! Be sure to check for 'null' values before using a result!</returns>
 		//[DISCodeLibrary(Version = 1)]
 		public DcfInterfaceResult[] GetInterfaces(bool refresh, params DcfInterfaceFilter[] uids)
@@ -484,8 +487,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 		/// Gets DCF Interfaces using DcfInterfaceFilter structs to identify a unique interface. This method caches the previously retrieved Interfaces in the background and will not retrieve the interfaces again unless the refresh bool is set to true.
 		/// <para/>Returns: An array with DCFDynamicLinkResult Objects in the same order as the requested UIDS, if an Interface (or interfaces) was not found then this DcfInterfaceResult will be null!
 		/// </summary>
-		/// <param name="refresh">Set To True if you want to force this method to perform a protocol.GetAllInterfaces and refresh it's internal Cache.</param>
-		/// <param name="UIDS">One or more DcfInterfaceFilter structs that identify a unique interface (can be both internal, external or a mix of both)</param>
+		/// <param name="uids">One or more DcfInterfaceFilter structs that identify a unique interface (can be both internal, external or a mix of both)</param>
 		/// <returns>An array with DCFDynamicLinkResult Objects in the same order as the requested UIDS, if an Interface (or interfaces) was not found then this DcfInterfaceResult will be null!</returns>
 		//[DISCodeLibrary(Version = 1)]
 		public DcfInterfaceResult[] GetInterfaces(params DcfInterfaceFilter[] uids)
@@ -1482,12 +1484,11 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 		/// Saves a collection of InterfaceProperties to a given ConnectivityInterface
 		/// <para/>Returns: An array of SaveInterfacePropertyResults in the same order as the requests. If one of the Saves failed, the returned object will indicate Success: false.
 		/// </summary>
-		/// <param name="forceRefresh">Force a Refresh of the properties for each Interface.</param>
 		/// <param name="connectivityInterface">ConnectivityInterface to save the properties to</param>
 		/// <param name="requests">A list of DcfSaveInterfacePropertyRequest</param>
 		/// <returns>An array of SaveInterfacePropertyResults in the same order as the requests. If one of the Saves failed, the returned object will indicate Success: false.</returns>
 		//[DISCodeLibrary(Version = 1)]
-		public DcfSaveInterfacePropertyResult[] SaveInterfaceProperties(bool foreceRefresh, ConnectivityInterface connectivityInterface, params DcfSaveInterfacePropertyRequest[] requests)
+		public DcfSaveInterfacePropertyResult[] SaveInterfaceProperties(ConnectivityInterface connectivityInterface, params DcfSaveInterfacePropertyRequest[] requests)
 		{
 			DcfSaveInterfacePropertyResult[] result = new DcfSaveInterfacePropertyResult[requests.Length];
 			for (int i = 0; i < requests.Length; i++)
@@ -1651,19 +1652,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 			interfaceProperties.Add(allNewAdded, propertyIdentifier);
 
 			return result;
-		}
-
-		/// <summary>
-		/// Saves a collection of InterfaceProperties to a given ConnectivityInterface
-		/// <para/>Returns: An array of SaveInterfacePropertyResults in the same order as the requests. If one of the Saves failed, the returned object will indicate Success: false.
-		/// </summary>
-		/// <param name="connectivityInterface">ConnectivityInterface to save the properties to</param>
-		/// <param name="requests">A list of DcfSaveInterfacePropertyRequest</param>
-		/// <returns>An array of SaveInterfacePropertyResults in the same order as the requests. If one of the Saves failed, the returned object will indicate Success: false.</returns>
-		//[DISCodeLibrary(Version = 1)]
-		public DcfSaveInterfacePropertyResult[] SaveInterfaceProperties(ConnectivityInterface connectivityInterface, params DcfSaveInterfacePropertyRequest[] requests)
-		{
-			return SaveInterfaceProperties(false, connectivityInterface, requests);
 		}
 
 		/// <summary>
@@ -2012,11 +2000,11 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 		/// Used to check if an unfiltered parametergroup has their Interfaces created and ready on the local DataMiner.
 		/// <para/>Returns: False, if not all interfaces are ready and the query timed out.
 		/// </summary>
-		/// <param name="DCFTablePID">PID of the Table linked to with dynamicId in the ParameterGroup.</param>
-		/// <param name="DCFTableIndexIDX">IDX of the TableKey Column.</param>
+		/// <param name="dcfTablePid">PID of the Table linked to with dynamicId in the ParameterGroup.</param>
+		/// <param name="dcfTableIndexIdx">IDX of the TableKey Column.</param>
 		/// <param name="parameterGroupID">The ParameterGroupID.</param>
-		/// <param name="SecondsToWait">Maximum time in seconds to wait until interfaces are ready.</param>
-		/// <param name="ThreadSleepMilliSeconds">Sleep Time in milliseconds between each check.</param>
+		/// <param name="secondsToWait">Maximum time in seconds to wait until interfaces are ready.</param>
+		/// <param name="threadSleepMilliSeconds">Sleep Time in milliseconds between each check.</param>
 		/// <returns>False, if not all interfaces are ready and the query timed out.</returns>
 		//[DISCodeLibrary(Version = 1)]
 		public bool CheckInterfacesReady(int dcfTablePid, uint dcfTableIndexIdx, int parameterGroupID, int secondsToWait = 120, int threadSleepMilliSeconds = 1000)
@@ -2959,7 +2947,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 		/// <param name="protocol">The protocol parameter</param>
 		/// <param name="dmaID">The dmaID parameter</param>
 		/// <param name="eleID">The eleID parameter</param>
-		/// <param name="timeoutSeconds">The timeoutSeconds parameter</param>
+		/// <param name="useCache">The useCache parameter</param>
 		/// <returns>The bool type object</returns>
 		//[DISCodeLibrary(Version = 1)]
 		public bool IsElementStarted(SLProtocol protocol, int dmaID, int eleID, bool useCache = true)
@@ -2997,20 +2985,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 			}
 
 			return result;
-		}
-
-		/// <summary>
-		/// The PropertiesBufferToDictionary method
-		/// </summary>
-		/// <param name="pid">The pid parameter</param>
-		/// <param name="propDic">The propDic parameter</param>
-		//[DISCodeLibrary(Version = 1)]
-		private void PropertiesBufferToDictionary(int pid, Dictionary<string, HashSet<int>> propDic)
-		{
-			string currentItfsProps = Convert.ToString(protocol.GetParameter(pid));
-
-			DebugLog("QA" + protocol.QActionID + "|DCF Old Mapping (" + pid + ")|" + currentItfsProps, LogType.Allways, LogLevel.NoLogging, DcfLogType.Setup);
-			MappingValueToMappingDictionary(currentItfsProps, propDic);
 		}
 
 		/// <summary>
@@ -3206,7 +3180,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 		/// <summary>
 		/// Get the state of an element (based on SLDMS, so basically this comes pretty much to the same as a IsElementLoadedInSLDMS)
 		/// </summary>
-		/// <param name="protocol"></param>
 		/// <param name="iDmaId">ID of the DMA on which the element from which the state needs to be retrieved is located</param>
 		/// <param name="iElementId">ID of the element from which the state needs to be retrieved</param>
 		/// <returns>The element state. In case of failure, null is returned.</returns>
