@@ -35,7 +35,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 	/// </summary>
 	public class DcfHelper : IDisposable
 	{
-		//Indicates that even if an element is 'stopped' it will check X seconds for startup
+		// Indicates that even if an element is 'stopped' it will check X seconds for startup
 		private int elementStartupLoopTimeInSeconds = 0;
 
 		private Dictionary<string, HashSet<int>> currentInterfaceProperties = new Dictionary<string, HashSet<int>>();
@@ -142,7 +142,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 			}
 			else
 			{
-				//Default custom without mapping - shouldn't happen
+				// Default custom without mapping - shouldn't happen
 				options = new Options.DcfMappingOptions();
 			}
 
@@ -547,7 +547,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 		//[DISCodeLibrary(Version = 1)]
 		public DcfConnectionResult[] GetConnections(bool forceRefresh, params DcfConnectionFilter[] requests)
 		{
-			protocol.Log("QA" + protocol.QActionID + "|TEMP|1.1", LogType.Error, LogLevel.NoLogging);
 			DcfConnectionResult[] result = new DcfConnectionResult[requests.Length];
 			for (int i = 0; i < requests.Length; i++)
 			{
@@ -564,7 +563,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 					if (request.DestinationInterface == null)
 					{
 						protocol.Log("QA" + protocol.QActionID + "|ERR|QA" + protocol.QActionID + "|DCF Connection|GetConnections: Destination Interface Not Found for Request:" + i, LogType.Error, LogLevel.NoLogging);
-						//DebugLog("QA" + protocol.QActionID + "|DCF Connection|GetConnections: Source Interface Not Found",LogType.Error,LogLevel.NoLogging,DcfLogType.Info);
 						continue;
 					}
 				}
@@ -618,7 +616,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 						}
 					}
 				}
-				protocol.Log("QA" + protocol.QActionID + "|TEMP|1.2", LogType.Error, LogLevel.NoLogging);
+
 				string uniqueKey = null;
 				Expression<Func<ConnectivityConnection, object>> indexer = null;
 
@@ -627,7 +625,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 					protocol.Log(string.Format("QA{0}: |ERR: DCF Connection|Ignoring GetConnections: Unloaded Element:{1} ", protocol.QActionID, requestElementKey), LogType.Error, LogLevel.NoLogging);
 					continue;
 				}
-				protocol.Log("QA" + protocol.QActionID + "|TEMP|1.3", LogType.Error, LogLevel.NoLogging);
+
 				string internalExternal;
 				switch (request.Type)
 				{
@@ -689,7 +687,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 					uniqueKey = internalExternal;
 				}
 
-				protocol.Log("QA" + protocol.QActionID + "|TEMP|1.4", LogType.Error, LogLevel.NoLogging);
 				if (!cachedConnectionPerElement.ContainsKey(requestElementKey) || forceRefresh)
 				{
 					var newPolledConnections = protocol.GetConnectivityConnections(requestDMAId, requestEleId);
@@ -702,7 +699,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 
 					cachedConnectionPerElement[requestElementKey] = new FastCollection<ConnectivityConnection>(newPolledConnections.Values.ToList());
 				}
-				protocol.Log("QA" + protocol.QActionID + "|TEMP|1.5", LogType.Error, LogLevel.NoLogging);
+
 				FastCollection<ConnectivityConnection> elementConnections = cachedConnectionPerElement[requestElementKey];
 				if (indexer != null && uniqueKey != null)
 				{
@@ -735,7 +732,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 					//ToDo write code to filter on connectionProperties check the GetInterfaces to see an example
 				}
 			}
-			protocol.Log("QA" + protocol.QActionID + "|TEMP|1.result", LogType.Error, LogLevel.NoLogging);
+
 			return result;
 		}
 
