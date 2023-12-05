@@ -1298,22 +1298,22 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 		//[DISCodeLibrary(Version = 1)]
 		public DcfSaveConnectionPropertyResult[] SaveConnectionProperties(bool forceRefresh, ConnectivityConnection connection, params DcfSaveConnectionPropertyRequest[] requests)
 		{
-			DcfSaveConnectionPropertyResult[] result = new DcfSaveConnectionPropertyResult[requests.Length];
+			DcfSaveConnectionPropertyResult[] results = new DcfSaveConnectionPropertyResult[requests.Length];
 			for (int i = 0; i < requests.Length; i++)
 			{
-				result[i] = new DcfSaveConnectionPropertyResult(false);
+				results[i] = new DcfSaveConnectionPropertyResult(false);
 			}
 
 			if (currentConnectionPropertyPID == -1)
 			{
 				protocol.Log("QA" + protocol.QActionID + "|ERR: DCF Connection Property|DCFHelper Error: Using SaveConnectionProperties requires the CurrentConnectionsPropertiesPID to be defined! Please change the Options Objects to include this PID", LogType.Error, LogLevel.NoLogging);
-				return result;
+				return results;
 			}
 
 			if (connection == null)
 			{
 				protocol.Log(string.Format("QA{0}: |ERR: DCF Connection Property|ConnectionPropertyRequest Had empty Connection. The Requested Property Save was not performed.", protocol.QActionID), LogType.Error, LogLevel.NoLogging);
-				return result;
+				return results;
 			}
 
 			bool externalConnection = connection.SourceDataMinerId != connection.DestinationDMAId || connection.SourceElementId != connection.DestinationEId;
@@ -1324,7 +1324,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 			if (!IsElementStarted(protocol, element))
 			{
 				protocol.Log(string.Format("QA{0}: |ERR: DCF Connection Property|Ignoring SaveConnectionProperties: Unloaded Element:{1} ", protocol.QActionID, element), LogType.Error, LogLevel.NoLogging);
-				return result;
+				return results;
 			}
 
 			FastCollection<ConnectivityConnectionProperty> connectionProperties;
@@ -1359,9 +1359,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 					continue;
 				}
 
-				bool fixedProperty = currentRequest.FixedProperty;
-				bool asynchronous = currentRequest.Asynchronous;
-
 				// Check if the Property already exists.
 				// Based on the Name of the property for this specific connection
 				string uniqueKey;
@@ -1376,78 +1373,23 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 
 				if (prop == null)
 				{
-					// Add New Property
-					// ADD PROPERTY
-					// Note if external, software will auto-sync the properties by default
+					var result = AddConnectionProperty(connection, newConnectProp, currentRequest.Asynchronous);
+					results[i] = result;
 
-					DebugLog("QA" + protocol.QActionID + "|DCF Connection Property|Adding Connection Property:" + newConnectProp.ConnectionPropertyName + ":" + newConnectProp.ConnectionPropertyValue, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
-
-					if (!asynchronous)
+					if (result.Success)
 					{
-						ConnectivityConnectionProperty propResult;
-						if (connection.AddProperty(newConnectProp.ConnectionPropertyName, newConnectProp.ConnectionPropertyType, newConnectProp.ConnectionPropertyValue, out propResult, 420000))
-						{
-							newConnectProp.ConnectionPropertyId = propResult.ConnectionPropertyId;
-							result[i] = new DcfSaveConnectionPropertyResult(true, newConnectProp);
-							allNewAdded.Add(newConnectProp);
-
-							DebugLog("QA" + protocol.QActionID + "|DCF Connection Property (" + newConnectProp.ConnectionPropertyId + ")|Property Added Id:" + newConnectProp.ConnectionPropertyId, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
-						}
-						else
-						{
-							protocol.Log(string.Format("QA{0}:|ERR: DCF Connection Property| Adding Connection Property:{1} Timed out after 7 Minutes or returned false! Property may not have been Added!", protocol.QActionID, newConnectProp.ConnectionPropertyName + ":" + newConnectProp.ConnectionPropertyValue), LogType.Error, LogLevel.NoLogging);
-						}
-					}
-					else
-					{
-						int outID;
-						if (connection.AddProperty(newConnectProp.ConnectionPropertyName, newConnectProp.ConnectionPropertyType, newConnectProp.ConnectionPropertyValue, out outID))
-						{
-							newConnectProp.ConnectionPropertyId = outID;
-							result[i] = new DcfSaveConnectionPropertyResult(true, newConnectProp);
-							allNewAdded.Add(newConnectProp);
-
-							DebugLog("QA" + protocol.QActionID + "|DCF Connection Property (" + newConnectProp.ConnectionPropertyId + ")|Property Getting Added (Async) Id:" + newConnectProp.ConnectionPropertyId, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
-						}
-						else
-						{
-							protocol.Log(string.Format("QA{0}:|ERR: DCF Connection Property| Adding Connection Property -Async- :{1} Returned False! Property may not have been Added!", protocol.QActionID, newConnectProp.ConnectionPropertyName + ":" + newConnectProp.ConnectionPropertyValue), LogType.Error, LogLevel.NoLogging);
-						}
+						allNewAdded.Add(result.Property);
 					}
 				}
 				else
 				{
-					// Update existing Property
-					// Check if Update is Necessary
-					// UPDATE PROPERTY
-					if (prop.ConnectionPropertyName == newConnectProp.ConnectionPropertyName && prop.ConnectionPropertyType == newConnectProp.ConnectionPropertyType && prop.ConnectionPropertyValue == newConnectProp.ConnectionPropertyValue)
-					{
-						DebugLog("QA" + protocol.QActionID + "|DCF Connection Property (" + prop.ConnectionPropertyId + ")|Not Updating Connection Property:" + prop.ConnectionPropertyId + "/" + newConnectProp.ConnectionPropertyName + ":" + newConnectProp.ConnectionPropertyValue + "-- No Change Detected", LogType.Allways, LogLevel.NoLogging, DcfLogType.Same);
-						newConnectProp.ConnectionPropertyId = prop.ConnectionPropertyId;
-						result[i] = new DcfSaveConnectionPropertyResult(true, newConnectProp);
-					}
-					else
-					{
-						DebugLog("QA" + protocol.QActionID + "|DCF Connection Property (" + prop.ConnectionPropertyId + ")|Updating Connection Property:" + prop.ConnectionPropertyId + "/" + newConnectProp.ConnectionPropertyName + ":" + newConnectProp.ConnectionPropertyValue, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
-
-						prop.ConnectionPropertyType = newConnectProp.ConnectionPropertyType;
-						prop.ConnectionPropertyValue = newConnectProp.ConnectionPropertyValue;
-						if (prop.Update())
-						{
-							newConnectProp.ConnectionPropertyId = prop.ConnectionPropertyId;
-							result[i] = new DcfSaveConnectionPropertyResult(true, newConnectProp);
-						}
-						else
-						{
-							protocol.Log(string.Format("QA{0}:|ERR: DCF Connection Property (" + prop.ConnectionPropertyId + ")| Updating Connection Property:{1} Returned False. Property may not have been Updated!", protocol.QActionID, prop.ConnectionPropertyId + "/" + newConnectProp.ConnectionPropertyName + ":" + newConnectProp.ConnectionPropertyValue), LogType.Error, LogLevel.NoLogging);
-						}
-					}
+					UpdateConnectionProperty(newConnectProp, prop);
 				}
 
-				if (result[i].Success)
+				if (results[i].Success)
 				{
 					string eleKey = CreateElementKey(connection.SourceDataMinerId, connection.SourceElementId);
-					if (fixedProperty)
+					if (currentRequest.FixedProperty)
 					{
 						AddToPropertyDictionary(newConnectionProperties, eleKey, -1 * newConnectProp.ConnectionPropertyId);
 					}
@@ -1461,7 +1403,76 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 			// Add the added ones to the cache
 			connectionProperties.Add(allNewAdded, propertyIdentifier);
 
-			return result;
+			return results;
+		}
+
+		private DcfSaveConnectionPropertyResult AddConnectionProperty(ConnectivityConnection connection, ConnectivityConnectionProperty newConnectionProperty, bool asynchronous)
+		{
+			// Add New Property
+			// ADD PROPERTY
+			// Note if external, software will auto-sync the properties by default
+			DebugLog("QA" + protocol.QActionID + "|DCF Connection Property|Adding Connection Property:" + newConnectionProperty.ConnectionPropertyName + ":" + newConnectionProperty.ConnectionPropertyValue, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+			if (!asynchronous)
+			{
+				ConnectivityConnectionProperty propResult;
+				if (connection.AddProperty(newConnectionProperty.ConnectionPropertyName, newConnectionProperty.ConnectionPropertyType, newConnectionProperty.ConnectionPropertyValue, out propResult, 420000))
+				{
+					newConnectionProperty.ConnectionPropertyId = propResult.ConnectionPropertyId;
+					DebugLog("QA" + protocol.QActionID + "|DCF Connection Property (" + newConnectionProperty.ConnectionPropertyId + ")|Property Added Id:" + newConnectionProperty.ConnectionPropertyId, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+					return new DcfSaveConnectionPropertyResult(true, newConnectionProperty);
+				}
+				else
+				{
+					protocol.Log(string.Format("QA{0}:|ERR: DCF Connection Property| Adding Connection Property:{1} Timed out after 7 Minutes or returned false! Property may not have been Added!", protocol.QActionID, newConnectionProperty.ConnectionPropertyName + ":" + newConnectionProperty.ConnectionPropertyValue), LogType.Error, LogLevel.NoLogging);
+					return null;
+				}
+			}
+			else
+			{
+				int outID;
+				if (connection.AddProperty(newConnectionProperty.ConnectionPropertyName, newConnectionProperty.ConnectionPropertyType, newConnectionProperty.ConnectionPropertyValue, out outID))
+				{
+					newConnectionProperty.ConnectionPropertyId = outID;
+					DebugLog("QA" + protocol.QActionID + "|DCF Connection Property (" + newConnectionProperty.ConnectionPropertyId + ")|Property Getting Added (Async) Id:" + newConnectionProperty.ConnectionPropertyId, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+					return new DcfSaveConnectionPropertyResult(true, newConnectionProperty);
+				}
+				else
+				{
+					protocol.Log(string.Format("QA{0}:|ERR: DCF Connection Property| Adding Connection Property -Async- :{1} Returned False! Property may not have been Added!", protocol.QActionID, newConnectionProperty.ConnectionPropertyName + ":" + newConnectionProperty.ConnectionPropertyValue), LogType.Error, LogLevel.NoLogging);
+					return null;
+				}
+			}
+		}
+
+		private DcfSaveConnectionPropertyResult UpdateConnectionProperty(ConnectivityConnectionProperty newConnectionProperty, ConnectivityConnectionProperty existingConnectionProperty)
+		{
+			// Update existing Property
+			// Check if Update is Necessary
+			// UPDATE PROPERTY
+			if (existingConnectionProperty.ConnectionPropertyName == newConnectionProperty.ConnectionPropertyName && existingConnectionProperty.ConnectionPropertyType == newConnectionProperty.ConnectionPropertyType && existingConnectionProperty.ConnectionPropertyValue == newConnectionProperty.ConnectionPropertyValue)
+			{
+				DebugLog("QA" + protocol.QActionID + "|DCF Connection Property (" + existingConnectionProperty.ConnectionPropertyId + ")|Not Updating Connection Property:" + existingConnectionProperty.ConnectionPropertyId + "/" + newConnectionProperty.ConnectionPropertyName + ":" + newConnectionProperty.ConnectionPropertyValue + "-- No Change Detected", LogType.Allways, LogLevel.NoLogging, DcfLogType.Same);
+				newConnectionProperty.ConnectionPropertyId = existingConnectionProperty.ConnectionPropertyId;
+				return new DcfSaveConnectionPropertyResult(true, newConnectionProperty);
+			}
+			else
+			{
+				DebugLog("QA" + protocol.QActionID + "|DCF Connection Property (" + existingConnectionProperty.ConnectionPropertyId + ")|Updating Connection Property:" + existingConnectionProperty.ConnectionPropertyId + "/" + newConnectionProperty.ConnectionPropertyName + ":" + newConnectionProperty.ConnectionPropertyValue, LogType.Allways, LogLevel.NoLogging, DcfLogType.Change);
+
+				existingConnectionProperty.ConnectionPropertyType = newConnectionProperty.ConnectionPropertyType;
+				existingConnectionProperty.ConnectionPropertyValue = newConnectionProperty.ConnectionPropertyValue;
+				if (existingConnectionProperty.Update())
+				{
+					newConnectionProperty.ConnectionPropertyId = existingConnectionProperty.ConnectionPropertyId;
+					return new DcfSaveConnectionPropertyResult(true, newConnectionProperty);
+				}
+				else
+				{
+					protocol.Log(string.Format("QA{0}:|ERR: DCF Connection Property (" + existingConnectionProperty.ConnectionPropertyId + ")| Updating Connection Property:{1} Returned False. Property may not have been Updated!", protocol.QActionID, existingConnectionProperty.ConnectionPropertyId + "/" + newConnectionProperty.ConnectionPropertyName + ":" + newConnectionProperty.ConnectionPropertyValue), LogType.Error, LogLevel.NoLogging);
+					return null;
+				}
+			}
 		}
 
 		/// <summary>
@@ -1520,9 +1531,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 			// Check if anything for the element has ever been retrieved
 			if (!cachedInterfacePropertiesPerElement.TryGetValue(element, out interfaceProperties))
 			{
-				var itfProps = connectivityInterface.InterfaceProperties;
-				interfaceProperties = new FastCollection<ConnectivityInterfaceProperty>(itfProps.Values.ToList());
-				itfProps = null;
+				interfaceProperties = new FastCollection<ConnectivityInterfaceProperty>(connectivityInterface.InterfaceProperties.Values.ToList());
 				cachedInterfacePropertiesPerElement.Add(element, interfaceProperties);
 			}
 			else if (!polledInterfaceProperties.Contains(interfaceIdentifier))
