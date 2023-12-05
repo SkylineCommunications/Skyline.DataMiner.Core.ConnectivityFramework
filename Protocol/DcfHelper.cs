@@ -1383,7 +1383,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 				}
 				else
 				{
-					UpdateConnectionProperty(newConnectProp, prop);
+					results[i] = UpdateConnectionProperty(newConnectProp, prop);
 				}
 
 				if (results[i].Success)
