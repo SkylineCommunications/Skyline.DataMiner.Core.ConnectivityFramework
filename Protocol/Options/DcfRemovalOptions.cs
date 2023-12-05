@@ -3,104 +3,21 @@
 	/// <summary>
 	/// Represents the DCF removal options.
 	/// </summary>
-	public abstract class DcfRemovalOptions
+	public abstract class DcfRemovalOptions : DcfRemovalOptionsBase
 	{
-		/// <summary>
-		/// The pidCurrentInterfaceProperties field
-		/// </summary>
-		private int pidCurrentInterfaceProperties = -1;
-
-		/// <summary>
-		/// The pidcurrentConnectionProperties field
-		/// </summary>
-		private int pidcurrentConnectionProperties = -1;
-
-		/// <summary>
-		/// The pidcurrentConnections field
-		/// </summary>
-		private int pidcurrentConnections = -1;
-
-		/// <summary>
-		/// The pidnewInterfaceProperties field
-		/// </summary>
-		private int pidnewInterfaceProperties = -1;
-
-		/// <summary>
-		/// The pidnewConnectionProperties field
-		/// </summary>
-		private int pidnewConnectionProperties = -1;
-
-		/// <summary>
-		/// The pidnewConnections field
-		/// </summary>
-		private int pidnewConnections = -1;
-
-		/// <summary>
-		/// The helperType field
-		/// </summary>
-		private SyncOption helperType = SyncOption.Custom;
-
-		/// <summary>
-		/// Gets or sets the HelperType property
-		/// </summary>
-		public SyncOption HelperType
-		{
-			get { return helperType; }
-			protected set { helperType = value; }
-		}
-
 		/// <summary>
 		/// Gets or sets the PIDnewConnections property
 		/// </summary>
-		protected int PIDnewConnections
-		{
-			get { return pidnewConnections; }
-			set { pidnewConnections = value; }
-		}
+		public int PIDnewConnections { get; set; } = -1;
 
 		/// <summary>
 		/// Gets or sets the PIDnewConnectionProperties property
 		/// </summary>
-		protected int PIDnewConnectionProperties
-		{
-			get { return pidnewConnectionProperties; }
-			set { pidnewConnectionProperties = value; }
-		}
+		public int PIDnewConnectionProperties { get; set; } = -1;
 
 		/// <summary>
 		/// Gets or sets the PIDnewInterfaceProperties property
 		/// </summary>
-		protected int PIDnewInterfaceProperties
-		{
-			get { return pidnewInterfaceProperties; }
-			set { pidnewInterfaceProperties = value; }
-		}
-
-		/// <summary>
-		/// Gets or sets the PIDcurrentConnections property
-		/// </summary>
-		protected int PIDcurrentConnections
-		{
-			get { return pidcurrentConnections; }
-			set { pidcurrentConnections = value; }
-		}
-
-		/// <summary>
-		/// Gets or sets the PIDcurrentConnectionProperties property
-		/// </summary>
-		protected int PIDcurrentConnectionProperties
-		{
-			get { return pidcurrentConnectionProperties; }
-			set { pidcurrentConnectionProperties = value; }
-		}
-
-		/// <summary>
-		/// Gets or sets the PIDcurrentInterfaceProperties property
-		/// </summary>
-		protected int PIDcurrentInterfaceProperties
-		{
-			get { return pidCurrentInterfaceProperties; }
-			set { pidCurrentInterfaceProperties = value; }
-		}
+		public int PIDnewInterfaceProperties { get; set; } = -1;
 	}
 }

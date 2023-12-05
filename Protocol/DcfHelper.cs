@@ -101,7 +101,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 		/// <param name="debugLevel">Indicates how much debug logging should be performed.</param>
 		//[DISCodeLibrary(Version = 1)]
 		//TODO: removalOptions check
-		private DcfHelper(SLProtocol protocol, int startupCheckPID, DcfRemovalOptions removalOptions, DcfDebugLevel debugLevel = DcfDebugLevel.None)
+		private DcfHelper(SLProtocol protocol, int startupCheckPID, DcfRemovalOptionsBase removalOptions, DcfDebugLevel debugLevel = DcfDebugLevel.None)
 		{
 			this.debugLevel = debugLevel;
 			DcfMappingOptions options;
@@ -245,7 +245,7 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 		/// <param name="options">Options holding the mapping pids needed to deal with the chosen removal strategy.</param>
 		/// <param name="debugLevel">Options to configure how the object should deal with removed connections & properties</param>
 		public DcfHelper(SLProtocol protocol, int startupCheck, DcfRemovalOptionsManual options, DcfDebugLevel debugLevel = DcfDebugLevel.None)
-: this(protocol, startupCheck, (DcfRemovalOptions)options, debugLevel)
+: this(protocol, startupCheck, (DcfRemovalOptionsBase)options, debugLevel)
 		{
 		}
 
