@@ -2,6 +2,7 @@
 
 ## About
 This package contains helper code allowing to easily manage DCF (DataMiner Connectivity Framework) connections. For more information about DCF, see [DataMiner Connectivity Framework](https://docs.dataminer.services/develop/devguide/Connector/AdvancedDcf.html).
+The generated NuGet package can be found on [nuget.org](https://www.nuget.org/packages/Skyline.DataMiner.Core.ConnectivityFramework.Protocol).
 
 ## Projects
 
