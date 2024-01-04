@@ -148,6 +148,12 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 
 			this.protocol = protocol;
 			helperType = options.HelperType;
+			currentInterfacesPropertyPID = options.PIDcurrentInterfaceProperties;
+			currentConnectionPropertyPID = options.PIDcurrentConnectionProperties;
+			currentConnectionsPID = options.PIDcurrentConnections;
+			newInterfacePropertyPID = options.PIDnewInterfaceProperties;
+			newConnectionPropertyPID = options.PIDnewConnectionProperties;
+			newConnectionsPID = options.PIDnewConnections;
 			localDMAID = protocol.DataMinerID;
 			localEleID = protocol.ElementID;
 			localElementKey = localDMAID + "/" + localEleID;
