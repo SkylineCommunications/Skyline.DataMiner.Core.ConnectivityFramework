@@ -148,12 +148,43 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 
 			this.protocol = protocol;
 			helperType = options.HelperType;
-			currentInterfacesPropertyPID = options.PIDcurrentInterfaceProperties;
-			currentConnectionPropertyPID = options.PIDcurrentConnectionProperties;
-			currentConnectionsPID = options.PIDcurrentConnections;
-			newInterfacePropertyPID = options.PIDnewInterfaceProperties;
-			newConnectionPropertyPID = options.PIDnewConnectionProperties;
-			newConnectionsPID = options.PIDnewConnections;
+
+			if(options.PIDcurrentInterfaceProperties != -1)
+			{
+				currentInterfacesPropertyPID = options.PIDcurrentInterfaceProperties;
+				PropertiesBufferToDictionary(currentInterfacesPropertyPID, currentInterfaceProperties);
+			}
+
+			if(options.PIDcurrentConnectionProperties != -1)
+			{
+				currentConnectionPropertyPID = options.PIDcurrentConnectionProperties;
+				PropertiesBufferToDictionary(currentConnectionPropertyPID, currentConnectionProperties);
+			}
+
+			if(options.PIDcurrentConnections != -1)
+			{
+				currentConnectionsPID = options.PIDcurrentConnections;
+				PropertiesBufferToDictionary(currentConnectionsPID, currentConnections);
+			}
+
+			if(options.PIDnewInterfaceProperties != -1)
+			{
+				newInterfacePropertyPID = options.PIDnewInterfaceProperties;
+				PropertiesBufferToDictionary(newInterfacePropertyPID, newInterfaceProperties);
+			}
+
+			if(options.PIDnewConnectionProperties != -1)
+			{
+				newConnectionPropertyPID = options.PIDnewConnectionProperties;
+				PropertiesBufferToDictionary(newConnectionPropertyPID, newConnectionProperties);
+			}
+
+			if(options.PIDnewConnections != -1)
+			{
+				newConnectionsPID = options.PIDnewConnections;
+				PropertiesBufferToDictionary(newConnectionsPID, newConnections);
+			}
+
 			localDMAID = protocol.DataMinerID;
 			localEleID = protocol.ElementID;
 			localElementKey = localDMAID + "/" + localEleID;
@@ -2904,6 +2935,27 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 			}
 
 			return newBuffer.ToString().TrimEnd(';');
+		}
+
+		private void PropertiesBufferToDictionary(int parameterID, Dictionary<string, HashSet<int>> propDic)
+		{
+			string currentItfsProps = Convert.ToString(protocol.GetParameter(parameterID));
+#if debug
+			protocol.Log("QA" + protocol.QActionID + "|DCF Old Mapping (" + parameterID + ")|" + currentItfsProps, LogType.Allways, LogLevel.NoLogging);
+#endif
+			foreach (string itfsProp in currentItfsProps.Split(';'))
+			{
+				if (!String.IsNullOrEmpty(itfsProp))
+				{
+					string eleKey;
+					string propKeys;
+					SplitElePropKey(itfsProp, out eleKey, out propKeys);
+					if (String.IsNullOrEmpty(propKeys)) continue;
+					string[] propKeysA = propKeys.Split('/');
+					int[] propKeysInt = Array.ConvertAll<string, int>(propKeysA, p => Convert.ToInt32(p));
+					AddToPropertyDictionary(propDic, eleKey, propKeysInt);
+				}
+			}
 		}
 
 		/// <summary>
