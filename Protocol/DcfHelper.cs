@@ -1020,7 +1020,6 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 						if (newDestinationConnection != null) destinationId = newDestinationConnection.ConnectionId;
 					}
 
-					protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|4", LogType.Error, LogLevel.NoLogging);
 					string inpEleKye = CreateElementKey(currentRequest.Source.DataMinerId, currentRequest.Source.ElementId);
 					if (currentRequest.FixedConnection)
 					{// Indicating fixed connections with negative values
@@ -1031,66 +1030,33 @@ namespace Skyline.DataMiner.Core.ConnectivityFramework.Protocol
 					}
 					else
 					{
-						protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|5", LogType.Error, LogLevel.NoLogging);
 						AddToPropertyDictionary(newConnections, inpEleKye, sourceId);
-						protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6", LogType.Error, LogLevel.NoLogging);
 					}
-					protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6.1", LogType.Error, LogLevel.NoLogging);
+
 					DcfSaveConnectionPropertyResult[] propertyResults = null;
 
 					//changed
 					if (currentRequest.PropertyRequests != null && currentRequest.PropertyRequests.Any())
 					{
 						var logPrefix = "QA" + protocol.QActionID;
-						protocol.Log(logPrefix + "|TEMPORARY|6.2", LogType.Error, LogLevel.NoLogging);
 
 						if (!currentRequest.Asynchronous)
 						{
-							protocol.Log(logPrefix + "|TEMPORARY|7", LogType.Error, LogLevel.NoLogging);
 							propertyResults = SaveConnectionProperties(matchingConnection, currentRequest.PropertyRequests.ToArray());
 						}
 						else
 						{
-							protocol.Log(logPrefix + "|TEMPORARY|6.2.1", LogType.Error, LogLevel.NoLogging);
-
-							if (matchingConnection == null)
-							{
-								protocol.Log(logPrefix + "|TEMPORARY|MatchCon null", LogType.Error, LogLevel.NoLogging);
-							}
-
 							protocol.Log($"QA{protocol.QActionID}:|ERR: DCF Connection ({sourceId}) | Saving Properties on an Async created connection is not supported. Please use synchronous SaveConnections", LogType.Error, LogLevel.NoLogging);
-							protocol.Log(logPrefix + "|TEMPORARY|6.2.1.1", LogType.Error, LogLevel.NoLogging);
 						}
 					}
 
-					/* if (currentRequest.PropertyRequests != null && currentRequest.PropertyRequests.Count() > 0)
-                     {
-                         protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6.2", LogType.Error, LogLevel.NoLogging);
-                         if (!currentRequest.Async)
-                         {
-                             protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|7", LogType.Error, LogLevel.NoLogging);
-                             propertyResults = SaveConnectionProperties(matchingConnection, currentRequest.PropertyRequests.ToArray());
-                         }
-                         else
-                         {
-                             protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6.2.1", LogType.Error, LogLevel.NoLogging);
-                             if (matchingConnection == null) protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|MatchCon null", LogType.Error, LogLevel.NoLogging);
-                             protocol.Log(string.Format("QA{0}:|ERR: DCF Connection (" + sourceId + ") | Saving Properties on an Async created connection is not supported. Please use synchronous SaveConnections", protocol.QActionID), LogType.Error, LogLevel.NoLogging);
-                             protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6.2.1.1", LogType.Error, LogLevel.NoLogging);
-                         }
-                     }*/
-					protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|6.3", LogType.Error, LogLevel.NoLogging);
 					if (matchingConnection == null && newDestinationConnection == null)
 					{
-						protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|8", LogType.Error, LogLevel.NoLogging);
 						result[i] = new DcfSaveConnectionResult(sourceId, destinationId, internalConnection, updated, propertyResults);
-						protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|9", LogType.Error, LogLevel.NoLogging);
 					}
 					else
 					{
-						protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|10", LogType.Error, LogLevel.NoLogging);
 						result[i] = new DcfSaveConnectionResult(matchingConnection, newDestinationConnection, internalConnection, updated, propertyResults);
-						protocol.Log("QA" + protocol.QActionID + "|TEMPORARY|11", LogType.Error, LogLevel.NoLogging);
 					}
 				}
 				catch (Exception e)
