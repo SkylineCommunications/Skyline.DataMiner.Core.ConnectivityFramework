@@ -22,6 +22,11 @@
 		<RootNamespace>Skyline.DataMiner.Core.ConnectivityFramework.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
 		<OutputType>Library</OutputType>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="Helpers\**" />
+	  <EmbeddedResource Remove="Helpers\**" />
+	  <None Remove="Helpers\**" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="" />
@@ -31,9 +36,5 @@
 
 	<ItemGroup>
 	  <PackageReference Include="Skyline.DataMiner.Dev.Protocol" Version="10.1.1" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Helpers\" />
 	</ItemGroup>
 </Project>
